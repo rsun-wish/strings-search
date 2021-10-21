@@ -8,6 +8,7 @@ export const CLOSE_NOTIFICATION = 'CLOSE_NOTIFICATION'
 export const OPEN_ABOUT_DIALOG = 'OPEN_ABOUT_DIALOG'
 export const CLOSE_ABOUT_DIALOG = 'CLOSE_ABOUT_DIALOG'
 export const EXPAND_ACCORDION = 'EXPAND_ACCORDION'
+export const EXPAND_MORE_MENUS = 'EXPAND_MORE_MENUS'
 export const clickCount = () => ({
     type: CLICK_COUNT
 })

@@ -13,7 +13,6 @@ import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import InputLabel from '@mui/material/InputLabel';
-import { LOCALES } from '../constants';
 import { fetchLocaleTranslations, setLocale, openAboutDialog } from '../actions'
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -23,6 +22,9 @@ import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import IconButton from '@mui/material/IconButton';
 import MoreIcon from '@mui/icons-material/MoreVert';
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
 
 const Alert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -55,8 +57,8 @@ const SearchIconWrapper = styled('div')(({ theme }) => ({
 }));
 
 
-const renderLocaleSelector = () => {
-    return LOCALES.map(locale => (
+const renderLocaleSelector = (locales) => {
+    return locales.map(locale => (
         <MenuItem value={locale}>
             <em>{locale}</em>
         </MenuItem>
@@ -75,6 +77,7 @@ const renderSnackBar = (dispatch, notification) => {
 
 export default function PrimarySearchAppBar() {
     const text = useSelector(state => state.app.searchText)
+    const locales = useSelector(state => state.app.locales)
     const selectedLocale = useSelector(state => state.app.selectedLocale)
     const translationLoading = useSelector(state => state.app.translationLoading)
     const notification = useSelector(state => state.app.notification)
@@ -90,7 +93,7 @@ export default function PrimarySearchAppBar() {
                 </Backdrop>
                 <Toolbar>
                     <Typography
-                        variant="h6"
+                        variant="h5"
                         noWrap
                         component="div"
                         sx={{ display: { xs: 'none', sm: 'block' } }}
@@ -98,7 +101,7 @@ export default function PrimarySearchAppBar() {
                         String search tool
                     </Typography>
                     <Tooltip title="Select the locale of the string you want to search" arrow>
-                        <FormControl variant="filled" sx={{ m: 1, minWidth: 120 }}>
+                        <FormControl variant="standard" color="primary" sx={{ m: 1, minWidth: 120 }}>
                             <InputLabel id="demo-simple-select-standard-label">Locale</InputLabel>
                             <Select
                                 labelId="demo-simple-select-standard-label"
@@ -110,7 +113,7 @@ export default function PrimarySearchAppBar() {
                                 }}
                                 label="Locale"
                             >
-                                {renderLocaleSelector()}
+                                {renderLocaleSelector(locales)}
                             </Select>
                         </FormControl>
                     </Tooltip>

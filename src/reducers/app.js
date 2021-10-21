@@ -2,6 +2,7 @@ import { CLICK_COUNT, CHANGE_SEARCH_TEXT, SEARCH, SET_LOCALE, FETCH_LOCALE_TRANS
 import produce from "immer"
 import sources from '../data/sources.json'
 import projects from '../data/projects.json'
+import locales from '../data/locales.json'
 
 /*
 sources
@@ -32,11 +33,12 @@ const initialState = {
     translationTarget: undefined,
     sources,
     projects,
+    locales,
     selectedLocale: 'en-US',
     translationLoading: false,
     translations: {},
     notification: '',
-    expansions: {}
+    expansions: {},
 }
 export default (state = initialState, action) => {
     switch (action.type) {

@@ -1,4 +1,4 @@
-export const LOCALES = [
+[
     "en-US",
     "ar-SA",
     "az-AZ",
