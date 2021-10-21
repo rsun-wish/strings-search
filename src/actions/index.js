@@ -7,6 +7,7 @@ export const SET_LOCALE = 'SET_LOCALE'
 export const CLOSE_NOTIFICATION = 'CLOSE_NOTIFICATION'
 export const OPEN_ABOUT_DIALOG = 'OPEN_ABOUT_DIALOG'
 export const CLOSE_ABOUT_DIALOG = 'CLOSE_ABOUT_DIALOG'
+export const EXPAND_ACCORDION = 'EXPAND_ACCORDION'
 export const clickCount = () => ({
     type: CLICK_COUNT
 })
@@ -46,4 +47,12 @@ export const openAboutDialog = () => ({
 
 export const closeAboutDialog = () => ({
     type: CLOSE_ABOUT_DIALOG
+})
+
+export const expandAccordion = (id, expanded) => ({
+    type: EXPAND_ACCORDION,
+    payload: {
+        id,
+        expanded
+    }
 })

@@ -38,5 +38,8 @@ export const LOCALES = [
     "sv-SE",
     "th-TH",
     "tl-PH",
-    "tr-TR"
+    "tr-TR",
+    "uk-UA",
+    "vi-VN",
+    "zh-TW"
 ]

@@ -15,15 +15,17 @@ import Button from '@mui/material/Button';
 import ManageSearchIcon from '@mui/icons-material/ManageSearch';
 import './SearchResult.css'
 import Grid from '@mui/material/Grid';
-import { changeSearchText, search } from '../actions';
+import { changeSearchText, expandAccordion, search } from '../actions';
 import { useSelector, useDispatch } from 'react-redux';
+import Divider from '@mui/material/Divider';
 
-const RenderTranslatedContent = (dispatch, target, expanded, setExpanded) => {
-    const handleChange = (id, originalState) => (event, isExpanded) => {
-        originalState[id] = isExpanded
-        setExpanded(originalState)
+const RenderTranslatedContent = (dispatch, target, expansions) => {
+    const isExpanded = expansions[target.source_string]
+    const handleChange = (id) => (event, expanded) => {
+        dispatch(expandAccordion(id, !isExpanded))
     };
-    return (<Accordion key={target.feature_name} expanded={expanded[target.feature_name]} onChange={handleChange(target.feature_name, expanded)}>
+
+    return (<Accordion key={target.source_string} expanded={isExpanded} onChange={handleChange(target.source_string)}>
         <AccordionSummary
             expandIcon={<ExpandMoreIcon />}
             aria-controls="panel1bh-content"
@@ -86,14 +88,14 @@ const RenderTranslatedContent = (dispatch, target, expanded, setExpanded) => {
         </AccordionDetails>
     </Accordion>);
 }
-const RenderSourceContent = (target, expanded, setExpanded) => {
-    const handleChange = (id, originalState) => (event, isExpanded) => {
-        originalState[id] = isExpanded
-        setExpanded(originalState)
+const RenderSourceContent = (dispatch, target, expansions) => {
+    const isExpanded = expansions[target.project]
+    const handleChange = (id) => (event, expanded) => {
+        dispatch(expandAccordion(id, !isExpanded))
     };
     return (
         <div>
-            <Accordion key={target.feature_name} expanded={expanded[target.feature_name]} onChange={handleChange(target.feature_name, expanded)}>
+            <Accordion key={target.project} expanded={isExpanded} onChange={handleChange(target.project)}>
                 <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                     aria-controls="panel1bh-content"
@@ -172,21 +174,21 @@ const RenderSourceContentHeader = (sourceHeaderRendered) => {
         return (<Grid container spacing={2}>
             <Grid item xs={2}>
                 <div className="header">
-                    <Typography>
+                    <Typography variant="h6" gutterBottom component="div">
                         Project Name
                     </Typography>
                 </div>
             </Grid>
             <Grid item xs={5}>
                 <div className="header" >
-                    <Typography>
+                    <Typography variant="h6" gutterBottom component="div">
                         Context
                     </Typography>
                 </div>
             </Grid >
             <Grid item xs={5}>
                 <div className="header" >
-                    <Typography>
+                    <Typography variant="h6" gutterBottom component="div">
                         Description
                     </Typography>
                 </div>
@@ -202,21 +204,21 @@ const RenderTranslatedContentHeader = (translatedHeaderRendered) => {
         return (<Grid container spacing={2}>
             <Grid item xs={4}>
                 <div className="header">
-                    <Typography>
+                    <Typography variant="h6" gutterBottom component="div">
                         Source String
                     </Typography>
                 </div>
             </Grid>
             <Grid item xs={4}>
-                <div className="header">
-                    <Typography>
+                <div className="header" >
+                    <Typography variant="h6" gutterBottom component="div">
                         Context
                     </Typography>
                 </div>
             </Grid >
             <Grid item xs={4}>
                 <div className="header" >
-                    <Typography>
+                    <Typography variant="h6" gutterBottom component="div">
                         Locale
                     </Typography>
                 </div>
@@ -228,12 +230,12 @@ const RenderTranslatedContentHeader = (translatedHeaderRendered) => {
     }
 }
 
-const renderTranslation = (dispatch, translationTarget, expanded, setExpanded) => {
+const renderTranslation = (dispatch, translationTarget, expansions) => {
     if (translationTarget) {
         return (
             <div>
                 {RenderTranslatedContentHeader(false)}
-                {RenderTranslatedContent(dispatch, translationTarget, expanded, setExpanded)}
+                {RenderTranslatedContent(dispatch, translationTarget, expansions)}
             </div>
         )
     } else {
@@ -242,8 +244,7 @@ const renderTranslation = (dispatch, translationTarget, expanded, setExpanded) =
 }
 
 export default function SearchResult() {
-    const [expanded, setExpanded] = React.useState({});
-
+    const expansions = useSelector(state => state.app.expansions)
     const targets = useSelector(state => state.app.sourceTargets);
     const translationTarget = useSelector(state => state.app.translationTarget)
     const dispatch = useDispatch()
@@ -251,14 +252,15 @@ export default function SearchResult() {
     let sourceHeaderRendered = false
     return (
         <div>
-            {renderTranslation(dispatch, translationTarget, expanded, setExpanded)}
+            {renderTranslation(dispatch, translationTarget, expansions)}
             {
                 targets && targets.map(target => {
                     return (
                         <div>
                             {RenderSourceContentHeader(sourceHeaderRendered)}
                             {sourceHeaderRendered = true}
-                            {RenderSourceContent(target, expanded, setExpanded)}
+                            {RenderSourceContent(dispatch, target, expansions)}
+                            <Divider />
                         </div>
                     )
                 })

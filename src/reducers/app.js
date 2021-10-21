@@ -36,6 +36,7 @@ const initialState = {
     translationLoading: false,
     translations: {},
     notification: '',
+    expansions: {}
 }
 export default (state = initialState, action) => {
     switch (action.type) {
@@ -71,6 +72,7 @@ export default (state = initialState, action) => {
                     console.log(translations[action.payload])
                 } else {
                     draft.translationTarget = undefined
+                    draft.expansions = {}
                 }
 
                 if (targets) {
@@ -78,8 +80,10 @@ export default (state = initialState, action) => {
                         ...target,
                         ...state.projects[target.project]
                     }))
+                    targets.forEach(target => draft.expansions[target.feature_name] = false)
                 } else {
                     draft.sourceTargets = []
+                    draft.expansions = {}
                 }
             })
         case CLOSE_NOTIFICATION:
