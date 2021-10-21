@@ -1,0 +1,8 @@
+.long_text_div {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.header {
+    text-align: center;
+}
