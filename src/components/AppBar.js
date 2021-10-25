@@ -135,7 +135,9 @@ export default function PrimarySearchAppBar() {
                                 value={selectedLocale}
                                 onChange={(event) => {
                                     dispatch(setLocale(event.target.value));
-                                    dispatch(fetchLocaleTranslations(event.target.value));
+                                    if (event.target.value !== 'en-US') {
+                                        dispatch(fetchLocaleTranslations(event.target.value));
+                                    }
                                 }}
                                 label="Locale"
                             >

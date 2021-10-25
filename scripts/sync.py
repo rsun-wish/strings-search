@@ -11,8 +11,8 @@ import polib
 from datetime import datetime
 
 packages = [{'url': 'https://pypi.infra.wish.com/api/package/wishstrings/', 'folder_name': 'wishstrings', 'is_python': True},
-                      {'url': 'https://pypi.infra.wish.com/api/package/merchantstrings/', 'folder_name': 'merchantstrings', 'is_python': True},
-                      {'url': 'https://npm.infra.wish.com/-/verdaccio/sidebar/@ContextLogic/mmstrings', 'folder_name': 'mmstrings', 'is_javascript': True}]
+                      {'url': 'https://pypi.infra.wish.com/api/package/merchantstrings/', 'folder_name': 'merchantstrings', 'is_python': True}]
+                    #   {'url': 'https://npm.infra.wish.com/-/verdaccio/sidebar/@ContextLogic/mmstrings', 'folder_name': 'mmstrings', 'is_javascript': True}]
 work_dir = '/Users/renchen/Work/playground/allstrings'
 artifacts_dir = os.path.join(work_dir, 'artifacts')
 output_dir = os.path.join(work_dir, 'output')
@@ -232,7 +232,8 @@ def build_stats():
     for pkg in packages:
         resp = requests.get(pkg['url'])
         resp_json = json.loads(resp.content.decode())
-        obj['versions'][resp_json['packages'][0]['name']] = resp_json['packages'][0]['version']
+        if 'is_python' in pkg:
+            obj['versions'][resp_json['packages'][0]['name']] = resp_json['packages'][0]['version']
     with open(build_json_dir, 'w') as f:
         json.dump(obj, f)
 
