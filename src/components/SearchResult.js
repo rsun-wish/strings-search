@@ -126,14 +126,51 @@ const RenderSourceContent = (dispatch, target, expansions) => {
                         <Table aria-label="simple table" style={{ tableLayout: 'fixed', width: '100%' }}>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell>Project Name</TableCell>
-                                    <TableCell align="right">Context</TableCell>
-                                    <TableCell align="right">Plurals</TableCell>
-                                    <TableCell align="right">Engineers</TableCell>
-                                    <TableCell align="right">Product Managers</TableCell>
-                                    <TableCell align="right">Owning team</TableCell>
-                                    <TableCell align="right">CC List</TableCell>
-                                    <TableCell align="right">Last Updated Time</TableCell>
+                                    <TableCell>
+                                        <Typography>
+                                            Project Name
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography>
+                                            Context
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography>
+                                            Plurals
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography>
+                                            Engineers
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography>
+                                            Product Managers
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography>
+                                            Owning team
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography>
+                                            CC List
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography>
+                                            Last Updated Time
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography>
+                                            Description
+                                        </Typography>
+                                    </TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -143,17 +180,18 @@ const RenderSourceContent = (dispatch, target, expansions) => {
                                     <TableCell component="th" scope="row">
                                         {target.project}
                                     </TableCell>
-                                    <TableCell align="right" style={{
+                                    <TableCell style={{
                                         whiteSpace: "normal",
                                         wordWrap: "break-word",
                                         width: '30%'
                                     }}>{target.context}</TableCell>
-                                    <TableCell align="right">{target.plurals}</TableCell>
-                                    <TableCell align="right">{target.engineers}</TableCell>
-                                    <TableCell align="right">{target.pm}</TableCell>
-                                    <TableCell align="right">{target.owning_team}</TableCell>
-                                    <TableCell align="right">{target.cc_list}</TableCell>
-                                    <TableCell align="right" style={{
+                                    <TableCell>{target.plurals}</TableCell>
+                                    <TableCell>{target.engineers}</TableCell>
+                                    <TableCell>{target.pm}</TableCell>
+                                    <TableCell>{target.owning_team}</TableCell>
+                                    <TableCell>{target.cc_list}</TableCell>
+                                    <TableCell>{target.last_update_time}</TableCell>
+                                    <TableCell style={{
                                         whiteSpace: "normal",
                                         wordWrap: "break-word",
                                         width: '30%'
@@ -259,7 +297,11 @@ export default function SearchResult() {
                         <div>
                             {RenderSourceContentHeader(sourceHeaderRendered)}
                             {sourceHeaderRendered = true}
-                            {RenderSourceContent(dispatch, target, expansions)}
+                            <div className="search-result">
+                                <Paper elevation={3}>
+                                    {RenderSourceContent(dispatch, target, expansions)}
+                                </Paper>
+                            </div>
                             <Divider />
                         </div>
                     )

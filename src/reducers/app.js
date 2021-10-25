@@ -1,8 +1,9 @@
-import { CLICK_COUNT, CHANGE_SEARCH_TEXT, SEARCH, SET_LOCALE, FETCH_LOCALE_TRANSLATIONS, CLOSE_NOTIFICATION, OPEN_ABOUT_DIALOG, CLOSE_ABOUT_DIALOG } from "../actions"
+import { CLICK_COUNT, CHANGE_SEARCH_TEXT, SEARCH, SET_LOCALE, FETCH_LOCALE_TRANSLATIONS, CLOSE_NOTIFICATION, OPEN_ABOUT_DIALOG, CLOSE_ABOUT_DIALOG, EXPAND_ALL, EXPAND_ACCORDION, TOGGLE_LEFT_DRAWER, DISPLAY_JSON_MODAL } from "../actions"
 import produce from "immer"
 import sources from '../data/sources.json'
 import projects from '../data/projects.json'
 import locales from '../data/locales.json'
+
 
 /*
 sources
@@ -39,6 +40,9 @@ const initialState = {
     translations: {},
     notification: '',
     expansions: {},
+    expandAll: false,
+    leftDrawerOpen: false,
+    displayModal: null
 }
 export default (state = initialState, action) => {
     switch (action.type) {
@@ -71,7 +75,6 @@ export default (state = initialState, action) => {
                 const translations = state.translations[state.selectedLocale]
                 if (translations) {
                     draft.translationTarget = translations[action.payload]
-                    console.log(translations[action.payload])
                 } else {
                     draft.translationTarget = undefined
                     draft.expansions = {}
@@ -82,7 +85,7 @@ export default (state = initialState, action) => {
                         ...target,
                         ...state.projects[target.project]
                     }))
-                    targets.forEach(target => draft.expansions[target.feature_name] = false)
+                    targets.forEach(target => draft.expansions[target.project] = false)
                 } else {
                     draft.sourceTargets = []
                     draft.expansions = {}
@@ -99,6 +102,27 @@ export default (state = initialState, action) => {
         case CLOSE_ABOUT_DIALOG:
             return produce(state, draft => {
                 draft.aboutDialogOpen = false
+            })
+        case EXPAND_ACCORDION:
+            return produce(state, draft => {
+                draft.expansions[action.payload.id] = action.payload.expanded
+            })
+        case EXPAND_ALL:
+            return produce(state, draft => {
+                draft.expandAll = action.payload
+                const targets = state.sourceTargets
+
+                if (targets) {
+                    targets.forEach(target => draft.expansions[target.project] = action.payload)
+                }
+            })
+        case TOGGLE_LEFT_DRAWER:
+            return produce(state, draft => {
+                draft.leftDrawerOpen = action.payload
+            })
+        case DISPLAY_JSON_MODAL:
+            return produce(state, draft => {
+                draft.displayModal = action.payload
             })
         default:
             return state

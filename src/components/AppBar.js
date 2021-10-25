@@ -8,12 +8,12 @@ import SearchIcon from '@mui/icons-material/Search';
 import SearchInput from './SearchInput';
 import Button from '@mui/material/Button';
 import { useDispatch, useSelector } from 'react-redux';
-import { closeNotification, search } from '../actions'
+import { closeNotification, search, toggleLeftDrawer } from '../actions'
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import InputLabel from '@mui/material/InputLabel';
-import { fetchLocaleTranslations, setLocale, openAboutDialog } from '../actions'
+import { fetchLocaleTranslations, setLocale, openAboutDialog, expandAll } from '../actions'
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 import Tooltip from '@mui/material/Tooltip';
@@ -22,9 +22,10 @@ import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import IconButton from '@mui/material/IconButton';
 import MoreIcon from '@mui/icons-material/MoreVert';
-import FormGroup from '@mui/material/FormGroup';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
+import MenuIcon from '@mui/icons-material/Menu';
+import InfoIcon from '@mui/icons-material/Info';
+import Chip from '@mui/material/Chip';
+import BUILD from '../data/build.json'
 
 const Alert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -75,16 +76,31 @@ const renderSnackBar = (dispatch, notification) => {
     </Stack>)
 }
 
+const renderExpandAllButton = (isExpandAll, sourceTargets, translationTarget, dispatch) => {
+    if (Object.keys(sourceTargets).length > 0 || translationTarget) {
+        return (
+            <Button variant="contained" color="success" onClick={() => dispatch(expandAll(!isExpandAll))} >
+                {isExpandAll ? 'Close All' : 'Expand All'}
+            </Button>)
+    } else {
+        return null;
+    }
+}
+
 export default function PrimarySearchAppBar() {
     const text = useSelector(state => state.app.searchText)
     const locales = useSelector(state => state.app.locales)
     const selectedLocale = useSelector(state => state.app.selectedLocale)
     const translationLoading = useSelector(state => state.app.translationLoading)
     const notification = useSelector(state => state.app.notification)
+    const sourceTargets = useSelector(state => state.app.sourceTargets)
+    const translationTarget = useSelector(state => state.app.translationTarget)
+    const isExpandAll = useSelector(state => state.app.expandAll)
+
     const dispatch = useDispatch()
     return (
         <Box sx={{ flexGrow: 1 }}>
-            <AppBar position="static">
+            <AppBar position="sticky">
                 <Backdrop
                     sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
                     open={translationLoading}
@@ -92,6 +108,16 @@ export default function PrimarySearchAppBar() {
                     <CircularProgress color="inherit" />
                 </Backdrop>
                 <Toolbar>
+                    <IconButton
+                        size="large"
+                        edge="start"
+                        color="inherit"
+                        aria-label="menu"
+                        sx={{ mr: 2 }}
+                        onClick={() => dispatch(toggleLeftDrawer(true))}
+                    >
+                        <MenuIcon />
+                    </IconButton>
                     <Typography
                         variant="h5"
                         noWrap
@@ -126,7 +152,13 @@ export default function PrimarySearchAppBar() {
                     <Button variant="contained" color="success" onClick={() => dispatch(search(text))}>
                         Search
                     </Button>
+                    {renderExpandAllButton(isExpandAll, sourceTargets, translationTarget, dispatch)}
                     <Box sx={{ flexGrow: 1 }} />
+                    <Stack direction="row" spacing={1}>
+                        <Tooltip title="Last build timestamp" arrow>
+                            <Chip label={BUILD.last_build_time} color='primary' />
+                        </Tooltip>
+                    </Stack>
                     <IconButton
                         size="large"
                         aria-label="display more actions"

@@ -1,12 +1,14 @@
 import * as React from 'react';
+import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { useDispatch, useSelector } from 'react-redux';
 import { closeAboutDialog } from '../actions';
 
-export default function About() {
+export default function BuildInfoDialog() {
     const open = useSelector(state => state.app.aboutDialogOpen)
     const dispatch = useDispatch()
     return (
@@ -17,7 +19,7 @@ export default function About() {
             aria-describedby="alert-dialog-description"
         >
             <DialogTitle id="alert-dialog-title">
-                About the String search tool
+                
             </DialogTitle>
             <DialogContent>
                 <DialogContentText id="alert-dialog-description">
