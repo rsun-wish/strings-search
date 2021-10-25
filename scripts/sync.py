@@ -18,7 +18,7 @@ artifacts_dir = os.path.join(work_dir, 'artifacts')
 output_dir = os.path.join(work_dir, 'output')
 
 headers = {
-    'Authorization': 'XTM-Basic 7wctG03jAekRWzjRzWt8Pa0tuOW3yqBECaRgfpKVWAa9nKqZo12+VhTM10YnWqVwxvCeDy8EAkw88GaNJ3GFyA=='
+    'Authorization': os.environ.get('XTM_TOKEN')
 }
 
 xtm_uri = "https://wish.xtm-intl.com/project-manager-api-rest"
@@ -237,13 +237,13 @@ def build_stats():
         json.dump(obj, f)
 
 def main():
-    # if not os.path.exists(artifacts_dir):
-    #     os.makedirs(artifacts_dir)
-    # if not os.path.exists(output_dir):
-    #     os.makedirs(output_dir)
-    # projects = get_projects()
-    # projects_json(projects)
-    # sources_json(projects)
+    if not os.path.exists(artifacts_dir):
+        os.makedirs(artifacts_dir)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    projects = get_projects()
+    projects_json(projects)
+    sources_json(projects)
     build_stats()
     artifacts()
     copy()
