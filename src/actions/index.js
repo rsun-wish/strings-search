@@ -38,7 +38,7 @@ export const setLocale = (locale) => ({
 
 export const fetchLocaleTranslations = (locale) => ({
     type: FETCH_LOCALE_TRANSLATIONS,
-    payload: fetch(`strings-search/translations/${locale}/strings.json`).then(data => data.json())
+    payload: fetch(`translations/${locale}/strings.json`).then(data => data.json())
 })
 
 export const closeNotification = () => ({

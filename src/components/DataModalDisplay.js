@@ -39,7 +39,7 @@ export default function DataModalDisplay() {
                         readOnly={true}
                         width='100%'
                         onSelectionChange={(value, event) => {
-                            if (data) {
+                            if (data && value.getCursor().row > 0) {
                                 dispatch(changeSearchText(data[value.getCursor().row - 1]));
                                 dispatch(search(data[value.getCursor().row - 1]));
                             }
