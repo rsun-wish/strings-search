@@ -10,9 +10,26 @@ import zipfile
 import polib
 from datetime import datetime
 
-packages = [{'url': 'https://pypi.infra.wish.com/api/package/wishstrings/', 'folder_name': 'wishstrings', 'is_python': True},
-                      {'url': 'https://pypi.infra.wish.com/api/package/merchantstrings/', 'folder_name': 'merchantstrings', 'is_python': True}]
-                    #   {'url': 'https://npm.infra.wish.com/-/verdaccio/sidebar/@ContextLogic/mmstrings', 'folder_name': 'mmstrings', 'is_javascript': True}]
+# packages = [
+packages = [
+    {'url': 'https://pypi.infra.wish.com/api/package/wishstrings/',
+        'folder_name': 'wishstrings', 'is_python': True},
+    {'url': 'https://pypi.infra.wish.com/api/package/merchantstrings/',
+        'folder_name': 'merchantstrings', 'is_python': True},
+    {'url': 'https://npm.infra.wish.com/-/verdaccio/sidebar/@ContextLogic/mmstrings',
+     'folder_name': 'mmstrings', 'is_javascript': True},
+    {'url': 'https://npm.infra.wish.com/-/verdaccio/sidebar/@ContextLogic/bluestrings',
+     'folder_name': 'bluestrings', 'is_javascript': True},
+    {'url': 'https://npm.infra.wish.com/-/verdaccio/sidebar/@ContextLogic/merchantstrings',
+     'folder_name': 'merchantstrings', 'is_javascript': True},
+    {'url': 'https://npm.infra.wish.com/-/verdaccio/sidebar/@ContextLogic/wishlocalwebstrings',
+     'folder_name': 'wishlocalwebstrings', 'is_javascript': True},
+    {'url': 'https://npm.infra.wish.com/-/verdaccio/sidebar/@ContextLogic/wishwebcozystrings',
+     'folder_name': 'wishwebcozystrings', 'is_javascript': True},
+    {'url': 'https://npm.infra.wish.com/-/verdaccio/sidebar/@ContextLogic/wpsuistrings',
+     'folder_name': 'wpsuistrings', 'is_javascript': True},
+    {'url': 'https://npm.infra.wish.com/-/verdaccio/sidebar/@ContextLogic/legostrings',
+     'folder_name': 'legostrings', 'is_javascript': True}]
 work_dir = '/Users/renchen/Work/playground/allstrings'
 artifacts_dir = os.path.join(work_dir, 'artifacts')
 output_dir = os.path.join(work_dir, 'output')
@@ -35,41 +52,71 @@ build_json_dir = os.path.join(output_dir, 'build.json')
 
 versions = {}
 
+
+def download(url):
+    local_filename = url.split('/')[-1]
+    local_file_dir = os.path.join(artifacts_dir, local_filename)
+    print(f'Downloading {url} to {local_file_dir}')
+    with requests.get(url, stream=True) as r:
+        r.raise_for_status()
+        with open(local_file_dir, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                f.write(chunk)
+    return local_file_dir
+
+
 def artifacts_helper(pkg_url_obj):
     resp = requests.get(pkg_url_obj['url'])
     resp_json = json.loads(resp.content.decode())
     if 'is_python' in pkg_url_obj:
         url = resp_json['packages'][0]['url']
-        dest_dir = os.path.join(artifacts_dir, pkg_url_obj['folder_name'] + '/')
+        dest_dir = os.path.join(artifacts_dir, pkg_url_obj['folder_name'])
         if not os.path.exists(dest_dir):
             os.makedirs(dest_dir)
-        print(f'Downloading {url} to {dest_dir}')
-        filepath = wget.download(url, out=dest_dir)
+        filepath = download(url)
         print('Download successful')
         tar = tarfile.open(filepath)
         untar_dir = os.path.join(dest_dir, 'untar')
         if not os.path.exists(untar_dir):
             os.makedirs(untar_dir)
         tar.extractall(untar_dir)
-        parse_content(os.path.basename(filepath).split('.tar.gz')[0], pkg_url_obj['folder_name'], untar_dir)
+        parse_python_artifact_content(os.path.basename(filepath).split('.tar.gz')
+                                      [0], pkg_url_obj['folder_name'], untar_dir)
     if 'is_javascript' in pkg_url_obj:
-        pass
+        dest_dir = os.path.join(
+            artifacts_dir, pkg_url_obj['folder_name'] + '/')
+        if not os.path.exists(dest_dir):
+            os.makedirs(dest_dir)
+        url = resp_json['latest']['dist']['tarball']
+        filepath = download(url)
+        print('Download successful')
+        tar = tarfile.open(filepath)
+        untar_dir = os.path.join(dest_dir, 'untar')
+        if not os.path.exists(untar_dir):
+            os.makedirs(untar_dir)
+        tar.extractall(untar_dir)
+        parse_javacript_artifact_content(untar_dir, pkg_url_obj['folder_name'])
+
 
 def merge(strings, content):
     for key, value in content.items():
         strings[key] = value
 
+
 def artifacts():
+    print('Start building strings.json for artifacts')
     if os.path.exists(artifacts_dir):
         shutil.rmtree(artifacts_dir)
     p = Pool(8)
     p.map(artifacts_helper, packages)
     strings = {}
     for pkg in packages:
-        translations_dir = os.path.join(artifacts_dir, pkg['folder_name'], 'translations')
+        translations_dir = os.path.join(
+            artifacts_dir, pkg['folder_name'], 'translations')
         locales = os.listdir(translations_dir)
         for locale in locales:
-            strings_dir = os.path.join(translations_dir, locale, 'strings.json')
+            strings_dir = os.path.join(
+                translations_dir, locale, 'strings.json')
             with open(strings_dir, 'r') as f:
                 data = json.load(f)
                 if locale in strings:
@@ -82,49 +129,111 @@ def artifacts():
         if not os.path.exists(strings_dir):
             os.makedirs(strings_dir)
         with open(os.path.join(strings_dir, 'strings.json'), 'w', encoding='utf8') as f:
-            json.dump(value, f, ensure_ascii=False)
+            json.dump(value, f, ensure_ascii=False, sort_keys=True)
 
     with open(locales_json_dir, 'w') as f:
         l = ['en-US'] + list(strings.keys())
         l.sort()
-        json.dump(l, f)
+        json.dump(l, f, sort_keys=True)
+    print('Successfully built all translations strings.json')
 
-def parse_content(foldername, pkg_folder_name, untar_dir):
-    locales_folder = os.path.join(untar_dir, foldername, pkg_folder_name, 'locale')
+def parse_javacript_artifact_content(untar_dir, pkg_folder_name):
+    print('Parsing contents at ' + untar_dir)
+    locales_folder = os.path.join(
+        untar_dir, 'package')
+    files = os.listdir(locales_folder)
+    for file in files:
+        if file.startswith('.') or file == 'package.json':
+            continue
+        strings = {}
+        locale = file.split('.')[0]
+        raw_file_path = os.path.join(locales_folder, locale + '.raw.json')
+        with open(raw_file_path, 'r') as f:
+            raw_file_data = json.load(f)
+            for source_string, value in raw_file_data.items():
+                if not source_string:
+                    continue
+
+                context = None
+                if '\u0004' in source_string:
+                    splitted = source_string.split('\u0004')
+                    context = splitted[0]
+                    source_string = splitted[1]
+                normalized_locale = locale.replace('_', '-')
+                if value[0]:
+                    try:
+                        if type(value[1]) is list:
+                            for v in value[1]:
+                                strings[v] = {
+                                    'is_translated': True, 'source_string': source_string, 'locale': normalized_locale, 'context': context, 'package': pkg_folder_name
+                                }
+                        else:
+                            for v in value[1:]:
+                                strings[v] = {
+                                    'is_translated': True, 'source_string': source_string, 'locale': normalized_locale, 'context': context, 'package': pkg_folder_name
+                                }
+                    except Exception as e:
+                        print(raw_file_path)
+                        print(value)
+                        raise e
+                else:
+                    strings[value[1]] = {
+                        'is_translated': True, 'source_string': source_string, 'locale': normalized_locale, 'context': context, 'package': pkg_folder_name
+                    }
+            strings_dir = os.path.join(
+                artifacts_dir, pkg_folder_name, 'translations', normalized_locale)
+            if not os.path.exists(strings_dir):
+                os.makedirs(strings_dir)
+            with open(os.path.join(strings_dir, 'strings.json'), 'w', encoding='utf8') as f:
+                json.dump(strings, f, ensure_ascii=False, sort_keys=True)
+
+
+def parse_python_artifact_content(foldername, pkg_folder_name, untar_dir):
+    print('Parsing contents at ' + untar_dir)
+    locales_folder = os.path.join(
+        untar_dir, foldername, pkg_folder_name, 'locale')
     locales = os.listdir(locales_folder)
     for locale in locales:
         strings = {}
         if locale.startswith('.'):
             continue
-        wish_mo_file_path = os.path.join(locales_folder, locale, 'LC_MESSAGES', 'wish.mo')
+        wish_mo_file_path = os.path.join(
+            locales_folder, locale, 'LC_MESSAGES', 'wish.mo')
         mo = polib.mofile(wish_mo_file_path)
         for entry in mo:
             if entry.msgstr:
-                strings[entry.msgstr] = { 'is_translated': True, 'source_string': entry.msgid, 'locale': locale, 'context': entry.msgctxt }
+                strings[entry.msgstr] = {
+                    'is_translated': True, 'source_string': entry.msgid, 'locale': locale, 'context': entry.msgctxt, 'package': pkg_folder_name}
             elif entry.msgstr_plural:
-                for plural in entry.msgstr_plural:
-                    strings[plural] = { 'is_translated': True, 'source_string': entry.msgid, 'locale': locale, 'context': entry.msgctxt }
+                for index in entry.msgstr_plural:
+                    strings[entry.msgstr_plural[index]] = {
+                        'is_translated': True, 'source_string': entry.msgid, 'locale': locale, 'context': entry.msgctxt, 'package': pkg_folder_name}
             else:
                 print('ERROR!!')
                 print(entry)
                 return
-        strings_dir = os.path.join(artifacts_dir, pkg_folder_name, 'translations', locale)
+        strings_dir = os.path.join(
+            artifacts_dir, pkg_folder_name, 'translations', locale)
         if not os.path.exists(strings_dir):
             os.makedirs(strings_dir)
         with open(os.path.join(strings_dir, 'strings.json'), 'w', encoding='utf8') as f:
-            json.dump(strings, f, ensure_ascii=False)
+            json.dump(strings, f, ensure_ascii=False, sort_keys=True)
+
 
 def get_projects():
+    print('Getting all projects from XTM')
     resp = requests.get(xtm_uri + projects_uri, headers=headers)
     total_count = int(resp.headers['xtm-total-items-count'])
     projects = json.loads(resp.content.decode())
     page = 2
     while len(projects) < total_count:
-        resp = requests.get(xtm_uri + projects_uri, headers=headers, params={'page': page})
+        resp = requests.get(xtm_uri + projects_uri,
+                            headers=headers, params={'page': page})
         projects = projects + json.loads(resp.content.decode())
         page = page + 1
-    print('succesfully fetched {0} projects'.format(len(projects)))
+    print('Succesfully fetched {0} projects'.format(len(projects)))
     return projects
+
 
 def description_json(description):
     try:
@@ -132,10 +241,11 @@ def description_json(description):
     except:
         return {}
 
+
 def projects_json_job(project, projects_json):
-    resp = requests.get(xtm_uri + project_uri.format(project['id']), headers=headers)
+    resp = requests.get(
+        xtm_uri + project_uri.format(project['id']), headers=headers)
     project = json.loads(resp.content.decode())
-    print(project['name'])
     projects_json[project['name']] = {
         'name': project['name'],
         'id': project['id'],
@@ -143,9 +253,12 @@ def projects_json_job(project, projects_json):
         'target_locales': project['targetLanguages']
     }
     if 'description' in project:
-        projects_json[project['name']] = {**projects_json[project['name']], **description_json(project['description'])}
+        projects_json[project['name']] = {
+            **projects_json[project['name']], **description_json(project['description'])}
+
 
 def projects_json(projects):
+    print('Start building projects.json')
     manager = Manager()
     projects_json = manager.dict()
     p = Pool(8)
@@ -154,77 +267,96 @@ def projects_json(projects):
         args.append((project, projects_json))
     p.starmap(projects_json_job, args)
     with open(projects_json_dir, 'w', encoding='utf8') as f:
-        json.dump(projects_json.copy(), f, ensure_ascii=False)
+        json.dump(projects_json.copy(), f, ensure_ascii=False, sort_keys=True)
+    print('Successfully saved projects.json to ' + projects_json_dir)
     return projects_json
 
+
 def source_files_job(project):
-    data = requests.get(xtm_uri + download_source_uri.format(project['id']), headers=headers).content
-    download_dest_path = os.path.join(all_projects_sources_dir, project['name'])
+    data = requests.get(
+        xtm_uri + download_source_uri.format(project['id']), headers=headers).content
+    download_dest_path = os.path.join(
+        all_projects_sources_dir, project['name'])
     print('Saving ' + project['name'] + ' to dir: ' + download_dest_path)
     if not os.path.exists(download_dest_path):
         os.makedirs(download_dest_path)
     with open(os.path.join(download_dest_path, 'source.zip'), 'wb') as f:
         f.write(data)
 
+
 def source_files(projects):
     p = Pool(8)
     p.map(source_files_job, projects)
 
-def sources_json(projects):
-    source_files(projects)
-    strings = {}
-    dirs = os.listdir(all_projects_sources_dir)
-    for dir in dirs:
-        source_path = os.path.join(all_projects_sources_dir, dir, 'source.zip')
-        try:
-            if not zipfile.is_zipfile(source_path):
-                continue
-            zf = zipfile.ZipFile(source_path)
-            files = zf.namelist()
-            for file in files:
-                if file.endswith('.po'):
-                    print(file)
-                    data = zf.read(file)
-                    po = polib.pofile(data.decode())
-                    for entry in po:
-                        if entry.msgid not in strings:
-                            strings[entry.msgid] = [{
+def sources_json_job(source_path, strings, dir):
+    try:
+        if not zipfile.is_zipfile(source_path):
+            print(source_path + ' is not a valid zip file. Skipping...')
+            return
+        zf = zipfile.ZipFile(source_path)
+        files = zf.namelist()
+        for file in files:
+            if file.endswith('.po'):
+                print(file)
+                data = zf.read(file)
+                po = polib.pofile(data.decode())
+                for entry in po:
+                    if entry.msgid not in strings:
+                        strings[entry.msgid] = [{
+                            'project': dir,
+                            'context': entry.msgctxt,
+                            'plurals': entry.msgid_plural
+                        }]
+                    else:
+                        strings[entry.msgid].append({
+                            'project': dir,
+                            'context': entry.msgctxt,
+                            'plurals': entry.msgid_plural
+                        })
+                    if entry.msgid_plural:
+                        if entry.msgid_plural not in strings:
+                            strings[entry.msgid_plural] = [{
                                 'project': dir,
-                                'context': entry.msgctxt,
-                                'plurals': entry.msgid_plural
+                                'context': entry.msgctxt
                             }]
                         else:
-                            strings[entry.msgid].append({
+                            strings[entry.msgid_plural].append({
                                 'project': dir,
-                                'context': entry.msgctxt,
-                                'plurals': entry.msgid_plural
+                                'context': entry.msgctxt
                             })
-                        if entry.msgid_plural:
-                            if entry.msgid_plural not in strings:
-                                strings[entry.msgid_plural] = [{
-                                    'project': dir,
-                                    'context': entry.msgctxt
-                                }]
-                            else:
-                                strings[entry.msgid_plural].append({
-                                    'project': dir,
-                                    'context': entry.msgctxt
-                                })
-        except Exception as e:
-            print(e)
-            print(source_path)
+    except Exception as e:
+        print(source_path)
+        raise e
+
+def sources_json(projects):
+    print('Start building sources.json')
+    source_files(projects)
+    manager = Manager()
+    strings = manager.dict()
+    dirs = os.listdir(all_projects_sources_dir)
+    p = Pool(8)
+
+    args = [(os.path.join(all_projects_sources_dir, dir, 'source.zip'), strings, dir) for dir in dirs]
+    p.starmap(sources_json_job, args)
     with open(sources_json_dir, 'w', encoding='utf8') as f:
-        json.dump(strings, f, ensure_ascii=False)
+        json.dump(strings.copy(), f, ensure_ascii=False, sort_keys=True)
+    print('Successfully saved sources.json to ' + sources_json_dir)
 
 def copy():
     shutil.copy(projects_json_dir, '../src/data/')
+    print('Copied artifact: ' + projects_json_dir, os.path.abspath('../src/data'))
     shutil.copy(sources_json_dir, '../src/data/')
+    print('Copied artifact: ' + sources_json_dir, os.path.abspath('../src/data'))
     shutil.copy(locales_json_dir, '../src/data/')
+    print('Copied artifact: ' + locales_json_dir, os.path.abspath('../src/data'))
     shutil.copy(build_json_dir, '../src/data/')
+    print('Copied artifact: ' + build_json_dir, os.path.abspath('../src/data'))
     shutil.rmtree('../public/translations')
     shutil.copytree(translations_output_dir, '../public/translations')
+    print('Copied artifact: ' + translations_output_dir, os.path.abspath('../public/translations'))
 
 def build_stats():
+    print('Start building build.json')
     obj = {
         'last_build_time': datetime.now().isoformat(),
         'versions': {}
@@ -233,9 +365,13 @@ def build_stats():
         resp = requests.get(pkg['url'])
         resp_json = json.loads(resp.content.decode())
         if 'is_python' in pkg:
-            obj['versions'][resp_json['packages'][0]['name']] = resp_json['packages'][0]['version']
+            obj['versions'][pkg['folder_name']] = resp_json['packages'][0]['version']
+        if 'is_javascript' in pkg:
+            obj['versions'][pkg['folder_name']] = resp_json['latest']['version']
     with open(build_json_dir, 'w') as f:
-        json.dump(obj, f)
+        json.dump(obj, f, sort_keys=True)
+    print('Successfuly saved build.json' + build_json_dir)
+
 
 def main():
     if not os.path.exists(artifacts_dir):
@@ -248,5 +384,6 @@ def main():
     build_stats()
     artifacts()
     copy()
+    print('Done')
 
 main()
