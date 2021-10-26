@@ -102,6 +102,14 @@ def merge(strings, content):
     for key, value in content.items():
         strings[key] = value
 
+def merge_with_append(strings, content):
+    for key, value in content.items():
+        if key == 'Payment':
+            print(value)
+        if key in strings:
+            strings[key] = strings[key] + value
+        else:
+            strings[key] = value
 
 def artifacts():
     print('Start building strings.json for artifacts')
@@ -242,7 +250,8 @@ def description_json(description):
         return {}
 
 
-def projects_json_job(project, projects_json):
+def projects_json_job(project):
+    projects_json = {}
     resp = requests.get(
         xtm_uri + project_uri.format(project['id']), headers=headers)
     project = json.loads(resp.content.decode())
@@ -255,17 +264,18 @@ def projects_json_job(project, projects_json):
     if 'description' in project:
         projects_json[project['name']] = {
             **projects_json[project['name']], **description_json(project['description'])}
+    return projects_json
 
 
 def projects_json(projects):
     print('Start building projects.json')
-    manager = Manager()
-    projects_json = manager.dict()
+    projects_json = {}
     p = Pool(8)
-    args = []
-    for project in projects:
-        args.append((project, projects_json))
-    p.starmap(projects_json_job, args)
+    results = p.map(projects_json_job, projects)
+    p.close()
+    p.join()
+    for ret in results:
+        merge(projects_json, ret)
     with open(projects_json_dir, 'w', encoding='utf8') as f:
         json.dump(projects_json.copy(), f, ensure_ascii=False, sort_keys=True)
     print('Successfully saved projects.json to ' + projects_json_dir)
@@ -288,19 +298,21 @@ def source_files(projects):
     p = Pool(8)
     p.map(source_files_job, projects)
 
-def sources_json_job(source_path, strings, dir):
+def sources_json_job(source_path, dir):
     try:
+        strings = {}
         if not zipfile.is_zipfile(source_path):
             print(source_path + ' is not a valid zip file. Skipping...')
-            return
+            return strings
         zf = zipfile.ZipFile(source_path)
         files = zf.namelist()
         for file in files:
             if file.endswith('.po'):
-                print(file)
                 data = zf.read(file)
                 po = polib.pofile(data.decode())
                 for entry in po:
+                    if entry.msgid == 'Payment':
+                        print(dir)
                     if entry.msgid not in strings:
                         strings[entry.msgid] = [{
                             'project': dir,
@@ -324,22 +336,26 @@ def sources_json_job(source_path, strings, dir):
                                 'project': dir,
                                 'context': entry.msgctxt
                             })
+        return strings
     except Exception as e:
-        print(source_path)
+        print(e)
         raise e
 
 def sources_json(projects):
     print('Start building sources.json')
     source_files(projects)
-    manager = Manager()
-    strings = manager.dict()
     dirs = os.listdir(all_projects_sources_dir)
     p = Pool(8)
 
-    args = [(os.path.join(all_projects_sources_dir, dir, 'source.zip'), strings, dir) for dir in dirs]
-    p.starmap(sources_json_job, args)
+    args = [(os.path.join(all_projects_sources_dir, dir, 'source.zip'), dir) for dir in dirs]
+    results = p.starmap(sources_json_job, args)
+    p.close()
+    p.join()
+    strings = {}
+    for ret in results:
+        merge_with_append(strings, ret)
     with open(sources_json_dir, 'w', encoding='utf8') as f:
-        json.dump(strings.copy(), f, ensure_ascii=False, sort_keys=True)
+        json.dump(strings, f, ensure_ascii=False, sort_keys=True)
     print('Successfully saved sources.json to ' + sources_json_dir)
 
 def copy():
