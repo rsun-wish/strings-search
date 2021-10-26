@@ -118,7 +118,7 @@ export default function PrimarySearchAppBar() {
                     >
                         <MenuIcon />
                     </IconButton>
-                    <Avatar alt="icon" src="/apple-touch-icon.png" />
+                    <Avatar alt="icon" src="apple-touch-icon.png" />
                     <Typography
                         variant="h5"
                         noWrap
