@@ -28,8 +28,8 @@ export default function DataModalDisplay() {
             aria-describedby="alert-dialog-description"
         >
             <DialogTitle id="alert-dialog-title">
-                {dataType == SOURCES_JSON ? 'All Source Strings' : null}
-                {dataType == TRANSLATIONS_JSON ? 'All Target Strings for locale ' + locale : null}
+                {dataType === SOURCES_JSON ? 'All Source Strings' : null}
+                {dataType === TRANSLATIONS_JSON ? 'All Target Strings for locale ' + locale : null}
             </DialogTitle>
             <DialogContent>
                 <DialogContentText id="alert-dialog-description">

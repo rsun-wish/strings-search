@@ -53,7 +53,12 @@ const RenderTranslatedContent = (dispatch, target, expansions) => {
                         {target.context}
                     </Typography>
                 </Grid>
-                <Grid item xs={4}>
+                <Grid item xs={2}>
+                    <Typography>
+                        {target.package}
+                    </Typography>
+                </Grid>
+                <Grid item xs={2}>
                     <Typography>{target.locale}</Typography>
                 </Grid>
             </Grid>
@@ -64,6 +69,8 @@ const RenderTranslatedContent = (dispatch, target, expansions) => {
                     <TableHead>
                         <TableRow>
                             <TableCell>Source String</TableCell>
+                            <TableCell>Context</TableCell>
+                            <TableCell>Package</TableCell>
                             <TableCell>Locale</TableCell>
                         </TableRow>
                     </TableHead>
@@ -77,6 +84,12 @@ const RenderTranslatedContent = (dispatch, target, expansions) => {
                                 width: '30%'
                             }}>
                                 {target.source_string}
+                            </TableCell>
+                            <TableCell component="th" scope="row">
+                                {target.context}
+                            </TableCell>
+                            <TableCell component="th" scope="row">
+                                {target.package}
                             </TableCell>
                             <TableCell component="th" scope="row">
                                 {target.locale}
@@ -254,7 +267,14 @@ const RenderTranslatedContentHeader = (translatedHeaderRendered) => {
                     </Typography>
                 </div>
             </Grid >
-            <Grid item xs={4}>
+            <Grid item xs={2}>
+                <div className="header" >
+                    <Typography variant="h6" gutterBottom component="div">
+                        Package
+                    </Typography>
+                </div>
+            </Grid >
+            <Grid item xs={2}>
                 <div className="header" >
                     <Typography variant="h6" gutterBottom component="div">
                         Locale

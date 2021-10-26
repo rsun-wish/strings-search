@@ -9,7 +9,7 @@ export default function FreeSolo() {
     const searchText = useSelector(state => state.app.searchText);
     return (
         <div id='search-input'>
-            <TextField multiline fullWidth inputProps={{ style: { paddingLeft: '50px' }, value: searchText }} value={searchText} onChange={(event) => dispatch(changeSearchText(event.target.value))} />
+            <TextField multiline fullWidth inputProps={{ style: { paddingLeft: '50px', color: 'white' }, value: searchText }} value={searchText} onChange={(event) => dispatch(changeSearchText(event.target.value))} />
         </div>
     )
 }

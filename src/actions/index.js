@@ -12,6 +12,7 @@ export const EXPAND_MORE_MENUS = 'EXPAND_MORE_MENUS'
 export const EXPAND_ALL = 'EXPAND_ALL'
 export const TOGGLE_LEFT_DRAWER = 'TOGGLE_LEFT_DRAWER'
 export const DISPLAY_JSON_MODAL = 'DISPLAY_JSON_MODAL'
+export const OPEN_BUILD_INFO_DIALOG = 'OPEN_BUILD_INFO_DIALOG'
 export const clickCount = () => ({
     type: CLICK_COUNT
 })
@@ -74,4 +75,9 @@ export const toggleLeftDrawer = (open) => ({
 export const displayJsonModal = (dataType) => ({
     type: DISPLAY_JSON_MODAL,
     payload: dataType
+})
+
+export const openBuildInfoDialog = (open) => ({
+    type: OPEN_BUILD_INFO_DIALOG,
+    payload: open
 })

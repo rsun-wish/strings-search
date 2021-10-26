@@ -1,4 +1,4 @@
-import { CLICK_COUNT, CHANGE_SEARCH_TEXT, SEARCH, SET_LOCALE, FETCH_LOCALE_TRANSLATIONS, CLOSE_NOTIFICATION, OPEN_ABOUT_DIALOG, CLOSE_ABOUT_DIALOG, EXPAND_ALL, EXPAND_ACCORDION, TOGGLE_LEFT_DRAWER, DISPLAY_JSON_MODAL } from "../actions"
+import { CLICK_COUNT, CHANGE_SEARCH_TEXT, SEARCH, SET_LOCALE, FETCH_LOCALE_TRANSLATIONS, CLOSE_NOTIFICATION, OPEN_ABOUT_DIALOG, CLOSE_ABOUT_DIALOG, EXPAND_ALL, EXPAND_ACCORDION, TOGGLE_LEFT_DRAWER, DISPLAY_JSON_MODAL, OPEN_BUILD_INFO_DIALOG } from "../actions"
 import produce from "immer"
 import sources from '../data/sources.json'
 import projects from '../data/projects.json'
@@ -42,8 +42,11 @@ const initialState = {
     expansions: {},
     expandAll: false,
     leftDrawerOpen: false,
-    displayModal: null
+    displayModal: null,
+    buildInfoDialogOpen: false
 }
+
+ // eslint-disable-next-line
 export default (state = initialState, action) => {
     switch (action.type) {
         case CLICK_COUNT:
@@ -123,6 +126,10 @@ export default (state = initialState, action) => {
         case DISPLAY_JSON_MODAL:
             return produce(state, draft => {
                 draft.displayModal = action.payload
+            })
+        case OPEN_BUILD_INFO_DIALOG:
+            return produce(state, draft => {
+                draft.buildInfoDialogOpen = action.payload
             })
         default:
             return state

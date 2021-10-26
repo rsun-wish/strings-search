@@ -5,6 +5,7 @@ import AboutDialog from './About';
 import MainBody from './MainBody';
 import LeftMenuDrawer from './LeftManuDrawer'
 import DataModalDisplay from './DataModalDisplay';
+import BuildInfoDialog from './BuildInfoDialog';
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
       <AppBar />
       <LeftMenuDrawer />
       <DataModalDisplay />
+      <BuildInfoDialog/>
       <MainBody />
       <AboutDialog />
       <SearchResult />

@@ -17,7 +17,7 @@ export default function About() {
             aria-describedby="alert-dialog-description"
         >
             <DialogTitle id="alert-dialog-title">
-                About the String search tool
+                About the String Search Tool
             </DialogTitle>
             <DialogContent>
                 <DialogContentText id="alert-dialog-description">

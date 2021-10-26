@@ -5,7 +5,6 @@ import App from './components/App';
 import reportWebVitals from './reportWebVitals';
 import { Provider } from 'react-redux'
 import configureStore from './store';
-import { loadData } from './actions'
 
 const store = configureStore()
 // store.dispatch(loadData())

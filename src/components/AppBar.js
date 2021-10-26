@@ -8,7 +8,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import SearchInput from './SearchInput';
 import Button from '@mui/material/Button';
 import { useDispatch, useSelector } from 'react-redux';
-import { closeNotification, search, toggleLeftDrawer } from '../actions'
+import { closeNotification, openBuildInfoDialog, search, toggleLeftDrawer } from '../actions'
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
@@ -24,8 +24,8 @@ import IconButton from '@mui/material/IconButton';
 import MoreIcon from '@mui/icons-material/MoreVert';
 import MenuIcon from '@mui/icons-material/Menu';
 import InfoIcon from '@mui/icons-material/Info';
-import Chip from '@mui/material/Chip';
-import BUILD from '../data/build.json'
+import Avatar from '@mui/material/Avatar';
+import './AppBar.css'
 
 const Alert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -118,13 +118,14 @@ export default function PrimarySearchAppBar() {
                     >
                         <MenuIcon />
                     </IconButton>
+                    <Avatar alt="icon" src="/apple-touch-icon.png" />
                     <Typography
                         variant="h5"
                         noWrap
                         component="div"
                         sx={{ display: { xs: 'none', sm: 'block' } }}
                     >
-                        String search tool
+                        String Search Tool
                     </Typography>
                     <Tooltip title="Select the locale of the string you want to search" arrow>
                         <FormControl variant="standard" color="primary" sx={{ m: 1, minWidth: 120 }}>
@@ -157,8 +158,16 @@ export default function PrimarySearchAppBar() {
                     {renderExpandAllButton(isExpandAll, sourceTargets, translationTarget, dispatch)}
                     <Box sx={{ flexGrow: 1 }} />
                     <Stack direction="row" spacing={1}>
-                        <Tooltip title="Last build timestamp" arrow>
-                            <Chip label={BUILD.last_build_time} color='primary' />
+                        <Tooltip title="Click to see build info" arrow>
+                            <IconButton
+                                size="large"
+                                aria-label="display build info"
+                                edge="end"
+                                color="inherit"
+                                onClick={() => dispatch(openBuildInfoDialog(true))}
+                            >
+                                <InfoIcon />
+                            </IconButton>
                         </Tooltip>
                     </Stack>
                     <IconButton
