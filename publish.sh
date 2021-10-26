@@ -1,5 +1,8 @@
-set -e
+git add src/data
+git add public/translations
+git commit -m "sync translations"
 git pull --rebase origin master
+set -e
 yarn build
 git checkout -b tmp
 cp -fr build/* .
