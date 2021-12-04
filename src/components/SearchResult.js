@@ -15,9 +15,13 @@ import Button from '@mui/material/Button';
 import ManageSearchIcon from '@mui/icons-material/ManageSearch';
 import './SearchResult.css'
 import Grid from '@mui/material/Grid';
-import { changeSearchText, expandAccordion, search } from '../actions';
+import { changeSearchText, expandAccordion, publishNotification, search } from '../actions';
 import { useSelector, useDispatch } from 'react-redux';
 import Divider from '@mui/material/Divider';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { CopyToClipboard } from 'react-copy-to-clipboard';
+
+import { styled } from '@mui/material/styles';
 
 const RenderTranslatedContent = (dispatch, target, expansions) => {
     const isExpanded = expansions[target.source_string]
@@ -119,18 +123,42 @@ const RenderSourceContent = (dispatch, target, expansions) => {
                             <Typography>
                                 {target.project}
                             </Typography>
+
+
+                            <Typography>
+                                <CopyToClipboard text={target.project}>
+                                    <Button variant="contained" color="success" endIcon={<ContentCopyIcon />} onClick={() => dispatch(publishNotification('Project name copied!'))}>
+                                        Copy
+                                    </Button>
+                                </CopyToClipboard>
+                            </Typography>
                         </Grid>
-                        <Grid item xs={5}>
+                        <Grid item xs={2}>
                             <Typography>
                                 {target.context}
                             </Typography>
                         </Grid>
-                        <Grid item xs={5}>
+                        <Grid item xs={4}>
                             <Typography>
                                 <div className="long_text_div">
                                     {target.description}
                                 </div>
                             </Typography>
+                        </Grid>
+                        <Grid item xs={4}>
+                            <Typography>
+                                <div className="long_text_div">
+                                    {target.source}
+                                </div>
+                            </Typography>
+                            <Typography>
+                                <CopyToClipboard text={target.source}>
+                                    <Button variant="contained" color="success" endIcon={<ContentCopyIcon />} onClick={() => dispatch(publishNotification('Source text copied!'))}>
+                                        Copy
+                                    </Button>
+                                </CopyToClipboard>
+                            </Typography>
+
                         </Grid>
                     </Grid>
                 </AccordionSummary>
@@ -230,17 +258,24 @@ const RenderSourceContentHeader = (sourceHeaderRendered) => {
                     </Typography>
                 </div>
             </Grid>
-            <Grid item xs={5}>
+            <Grid item xs={2}>
                 <div className="header" >
                     <Typography variant="h6" gutterBottom component="div">
                         Context
                     </Typography>
                 </div>
             </Grid >
-            <Grid item xs={5}>
+            <Grid item xs={4}>
                 <div className="header" >
                     <Typography variant="h6" gutterBottom component="div">
                         Description
+                    </Typography>
+                </div>
+            </Grid >
+            <Grid item xs={4}>
+                <div className="header" >
+                    <Typography variant="h6" gutterBottom component="div">
+                        Source String
                     </Typography>
                 </div>
             </Grid >
@@ -290,12 +325,7 @@ const RenderTranslatedContentHeader = (translatedHeaderRendered) => {
 
 const renderTranslation = (dispatch, translationTarget, expansions) => {
     if (translationTarget) {
-        return (
-            <div>
-                {RenderTranslatedContentHeader(false)}
-                {RenderTranslatedContent(dispatch, translationTarget, expansions)}
-            </div>
-        )
+        return RenderTranslatedContent(dispatch, translationTarget, expansions)
     } else {
         return null;
     }
@@ -303,14 +333,21 @@ const renderTranslation = (dispatch, translationTarget, expansions) => {
 
 export default function SearchResult() {
     const expansions = useSelector(state => state.app.expansions)
-    const targets = useSelector(state => state.app.sourceTargets);
-    const translationTarget = useSelector(state => state.app.translationTarget)
+    const targets = useSelector(state => state.app.filteredSourceTargets);
+    const translationTargets = useSelector(state => state.app.translationTargets)
     const dispatch = useDispatch()
 
+    let translatedHeaderRendered = false
     let sourceHeaderRendered = false
     return (
         <div>
-            {renderTranslation(dispatch, translationTarget, expansions)}
+            {translationTargets && translationTargets.map(target => {
+                return (<div>
+                    {RenderTranslatedContentHeader(translatedHeaderRendered)}
+                    {translatedHeaderRendered = true}
+                    {renderTranslation(dispatch, target, expansions)}
+                </div>)
+            })}
             {
                 targets && targets.map(target => {
                     return (

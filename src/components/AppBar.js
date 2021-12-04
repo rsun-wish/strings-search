@@ -8,12 +8,12 @@ import SearchIcon from '@mui/icons-material/Search';
 import SearchInput from './SearchInput';
 import Button from '@mui/material/Button';
 import { useDispatch, useSelector } from 'react-redux';
-import { closeNotification, openBuildInfoDialog, search, toggleLeftDrawer } from '../actions'
+import { closeNotification, displayDownloadModal, filterProject, openBuildInfoDialog, search, toggleLeftDrawer } from '../actions'
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import InputLabel from '@mui/material/InputLabel';
-import { fetchLocaleTranslations, setLocale, openAboutDialog, expandAll } from '../actions'
+import { fetchLocaleTranslations, setLocale, openAboutDialog, expandAll, setFuzzySearch } from '../actions'
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 import Tooltip from '@mui/material/Tooltip';
@@ -25,6 +25,9 @@ import MoreIcon from '@mui/icons-material/MoreVert';
 import MenuIcon from '@mui/icons-material/Menu';
 import InfoIcon from '@mui/icons-material/Info';
 import Avatar from '@mui/material/Avatar';
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
 import './AppBar.css'
 
 const Alert = React.forwardRef(function Alert(props, ref) {
@@ -66,6 +69,14 @@ const renderLocaleSelector = (locales) => {
     ))
 }
 
+const renderProjectFilter = (projects) => {
+    return projects.map(project => (
+        <MenuItem value={project}>
+            <em>{project}</em>
+        </MenuItem>
+    ))
+}
+
 const renderSnackBar = (dispatch, notification) => {
     return (<Stack spacing={2} sx={{ width: '100%' }}>
         <Snackbar open={notification} autoHideDuration={6000} onClose={() => dispatch(closeNotification())}>
@@ -87,6 +98,39 @@ const renderExpandAllButton = (isExpandAll, sourceTargets, translationTarget, di
     }
 }
 
+const renderDownloadButton = (dispatch, sourceTargets) => {
+    if (sourceTargets.length > 0) {
+        return (<Button variant="contained" color="success" onClick={() => { dispatch(displayDownloadModal(true)) }} >
+            Download {sourceTargets.length} Results
+        </Button>);
+    } else {
+        return null;
+    }
+}
+
+const renderProjectFiler = (projectFilter, sourceTargets, dispatch) => {
+    const projects = new Set()
+    sourceTargets.forEach(target => {
+        projects.add(target.project.split('-')[0])
+    })
+    return (
+        <FormControl variant="standard" color="primary" sx={{ m: 1, minWidth: 120 }}>
+            <InputLabel id="demo-simple-select-standard-label">Project</InputLabel>
+            <Select
+                labelId="demo-simple-select-standard-label"
+                id="demo-simple-select-standard"
+                value={projectFilter}
+                onChange={(event) => {
+                    dispatch(filterProject(event.target.value));
+                }}
+                label="Project"
+            >
+                {renderProjectFilter(Array.from(projects))}
+            </Select>
+        </FormControl>
+    )
+}
+
 export default function PrimarySearchAppBar() {
     const text = useSelector(state => state.app.searchText)
     const locales = useSelector(state => state.app.locales)
@@ -94,8 +138,11 @@ export default function PrimarySearchAppBar() {
     const translationLoading = useSelector(state => state.app.translationLoading)
     const notification = useSelector(state => state.app.notification)
     const sourceTargets = useSelector(state => state.app.sourceTargets)
+    const filteredSourceTargets = useSelector(state => state.app.filteredSourceTargets)
     const translationTarget = useSelector(state => state.app.translationTarget)
     const isExpandAll = useSelector(state => state.app.expandAll)
+    const fuzzySearch = useSelector(state => state.app.fuzzySearch)
+    const projectFilter = useSelector(state => state.app.projectFilter)
 
     const dispatch = useDispatch()
     return (
@@ -146,6 +193,7 @@ export default function PrimarySearchAppBar() {
                             </Select>
                         </FormControl>
                     </Tooltip>
+                    {renderProjectFiler(projectFilter, sourceTargets, dispatch)}
                     <Search>
                         <SearchIconWrapper>
                             <SearchIcon />
@@ -155,7 +203,11 @@ export default function PrimarySearchAppBar() {
                     <Button variant="contained" color="success" onClick={() => dispatch(search(text))}>
                         Search
                     </Button>
-                    {renderExpandAllButton(isExpandAll, sourceTargets, translationTarget, dispatch)}
+                    <FormGroup>
+                        <FormControlLabel control={<Checkbox color="default" checked={fuzzySearch} onChange={() => dispatch(setFuzzySearch(!fuzzySearch))} />} label="Fuzzy" />
+                    </FormGroup>
+                    {renderExpandAllButton(isExpandAll, filteredSourceTargets, translationTarget, dispatch)}
+                    {renderDownloadButton(dispatch, filteredSourceTargets)}
                     <Box sx={{ flexGrow: 1 }} />
                     <Stack direction="row" spacing={1}>
                         <Tooltip title="Click to see build info" arrow>

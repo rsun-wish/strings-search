@@ -13,6 +13,13 @@ export const EXPAND_ALL = 'EXPAND_ALL'
 export const TOGGLE_LEFT_DRAWER = 'TOGGLE_LEFT_DRAWER'
 export const DISPLAY_JSON_MODAL = 'DISPLAY_JSON_MODAL'
 export const OPEN_BUILD_INFO_DIALOG = 'OPEN_BUILD_INFO_DIALOG'
+export const SET_FUZZY_SEARCH = 'SET_FUZZY_SEARCH'
+export const DISPLAY_DOWNLOAD_MODAL = 'DISPLAY_DOWNLOAD_MODAL'
+export const CHANGE_DOWNLOAD_RESULT_FILENAME = 'CHANGE_DOWNLOAD_RESULT_FILENAME'
+export const CHANGE_DOWNLOAD_FILE_FORMAT = 'CHANGE_DOWNLOAD_FILE_FORMAT'
+export const DOWNLOAD_RESULTS = 'DOWNLOAD_RESULTS'
+export const FILTER_PROJECT = 'FILTER_PROJECT'
+export const PUBLISH_NOTIFICATION = 'PUBLISH_NOTIFICATION'
 export const clickCount = () => ({
     type: CLICK_COUNT
 })
@@ -80,4 +87,38 @@ export const displayJsonModal = (dataType) => ({
 export const openBuildInfoDialog = (open) => ({
     type: OPEN_BUILD_INFO_DIALOG,
     payload: open
+})
+
+export const setFuzzySearch = (checked) => ({
+    type: SET_FUZZY_SEARCH,
+    payload: checked
+})
+
+export const displayDownloadModal = (display) => ({
+    type: DISPLAY_DOWNLOAD_MODAL,
+    payload: display
+})
+
+export const changeDownloadResultFileName = (filename) => ({
+    type: CHANGE_DOWNLOAD_RESULT_FILENAME,
+    payload: filename
+})
+
+export const changeDownloadResultFileFormat = (format) => ({
+    type: CHANGE_DOWNLOAD_FILE_FORMAT,
+    payload: format
+})
+
+export const downloadResults = () => ({
+    type: DOWNLOAD_RESULTS,
+})
+
+export const filterProject = (project) => ({
+    type: FILTER_PROJECT,
+    payload: project
+})
+
+export const publishNotification = (content) => ({
+    type: PUBLISH_NOTIFICATION,
+    payload: content
 })

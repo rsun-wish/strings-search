@@ -6,6 +6,7 @@ import MainBody from './MainBody';
 import LeftMenuDrawer from './LeftManuDrawer'
 import DataModalDisplay from './DataModalDisplay';
 import BuildInfoDialog from './BuildInfoDialog';
+import DownloadModalDisplay from './DownloadModalDisplay';
 
 function App() {
   return (
@@ -13,7 +14,8 @@ function App() {
       <AppBar />
       <LeftMenuDrawer />
       <DataModalDisplay />
-      <BuildInfoDialog/>
+      <DownloadModalDisplay />
+      <BuildInfoDialog />
       <MainBody />
       <AboutDialog />
       <SearchResult />

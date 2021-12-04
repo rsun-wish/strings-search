@@ -1,8 +1,9 @@
-import { CLICK_COUNT, CHANGE_SEARCH_TEXT, SEARCH, SET_LOCALE, FETCH_LOCALE_TRANSLATIONS, CLOSE_NOTIFICATION, OPEN_ABOUT_DIALOG, CLOSE_ABOUT_DIALOG, EXPAND_ALL, EXPAND_ACCORDION, TOGGLE_LEFT_DRAWER, DISPLAY_JSON_MODAL, OPEN_BUILD_INFO_DIALOG } from "../actions"
+import { CLICK_COUNT, CHANGE_SEARCH_TEXT, SEARCH, SET_LOCALE, FETCH_LOCALE_TRANSLATIONS, CLOSE_NOTIFICATION, OPEN_ABOUT_DIALOG, CLOSE_ABOUT_DIALOG, EXPAND_ALL, EXPAND_ACCORDION, TOGGLE_LEFT_DRAWER, DISPLAY_JSON_MODAL, OPEN_BUILD_INFO_DIALOG, SET_FUZZY_SEARCH, DISPLAY_DOWNLOAD_MODAL, CHANGE_DOWNLOAD_RESULT_FILENAME, CHANGE_DOWNLOAD_FILE_FORMAT, DOWNLOAD_RESULTS, FILTER_PROJECT, COPY, PUBLISH_NOTIFICATION } from "../actions"
 import produce from "immer"
 import sources from '../data/sources.json'
 import projects from '../data/projects.json'
 import locales from '../data/locales.json'
+import exportFromJSON from 'export-from-json';
 
 
 /*
@@ -31,7 +32,7 @@ const initialState = {
     searchText: '',
     sourceTargets: [],
     aboutDialogOpen: false,
-    translationTarget: undefined,
+    translationTargets: undefined,
     sources,
     projects,
     locales,
@@ -43,10 +44,55 @@ const initialState = {
     expandAll: false,
     leftDrawerOpen: false,
     displayModal: null,
-    buildInfoDialogOpen: false
+    buildInfoDialogOpen: false,
+    fuzzySearch: false,
+    displayDownloadModal: false,
+    downloadResultFileName: 'results',
+    downloadResultFileFormat: exportFromJSON.types.json,
+    filteredSourceTargets: [],
+    projectFilter: ''
 }
 
- // eslint-disable-next-line
+const fuzzySearch = (state, action, draft) => {
+    const fuzzySearch = state.fuzzySearch
+    let sourceStrings = [action.payload]
+    if (fuzzySearch) {
+        sourceStrings = Object.keys(state.sources).filter(key => key.includes(action.payload))
+    }
+
+    let sourceTargets = []
+    let translationTargets = []
+    const translations = state.translations[state.selectedLocale]
+
+    for (var i = 0; i < sourceStrings.length; i++) {
+        const sourceString = sourceStrings[i]
+        const targets = state.sources[sourceStrings[i]]
+        if (translations && translations[sourceStrings[i]]) {
+            translationTargets.concat(translations[sourceStrings[i]])
+        }
+
+        if (targets) {
+            const mappedTargets = targets.map(target => ({
+                source: sourceString,
+                ...target,
+                ...state.projects[target.project]
+            }));
+            sourceTargets = sourceTargets.concat(mappedTargets);
+        }
+    }
+    draft.sourceTargets = sourceTargets;
+    draft.filteredSourceTargets = sourceTargets;
+    draft.translationTargets = translationTargets;
+    draft.sourceTargets.forEach(target => draft.expansions[target.project] = false);
+    draft.translationTargets.forEach(target => draft.expansions[target.sourceStrings] = false);
+    if (draft.translationTargets.length && draft.sourceTargets.length === 0) {
+        draft.translationTargets = []
+        draft.filteredSourceTargets = []
+        draft.expansions = {}
+    }
+}
+
+// eslint-disable-next-line
 export default (state = initialState, action) => {
     switch (action.type) {
         case CLICK_COUNT:
@@ -74,24 +120,32 @@ export default (state = initialState, action) => {
             })
         case SEARCH:
             return produce(state, draft => {
-                const targets = state.sources[action.payload]
-                const translations = state.translations[state.selectedLocale]
-                if (translations) {
-                    draft.translationTarget = translations[action.payload]
+                if (state.fuzzySearch) {
+                    fuzzySearch(state, action, draft);
                 } else {
-                    draft.translationTarget = undefined
-                    draft.expansions = {}
-                }
+                    const targets = state.sources[action.payload]
+                    const translations = state.translations[state.selectedLocale]
+                    if (translations) {
+                        draft.translationTargets = [translations[action.payload]]
+                    } else {
+                        draft.translationTargets = undefined
+                        draft.expansions = {}
+                    }
 
-                if (targets) {
-                    draft.sourceTargets = targets.map(target => ({
-                        ...target,
-                        ...state.projects[target.project]
-                    }))
-                    targets.forEach(target => draft.expansions[target.project] = false)
-                } else {
-                    draft.sourceTargets = []
-                    draft.expansions = {}
+                    if (targets) {
+                        draft.sourceTargets = targets.map(target => ({
+                            ...target,
+                            ...state.projects[target.project],
+                            source: action.payload,
+                        }))
+                        draft.filteredSourceTargets = draft.sourceTargets
+                        targets.forEach(target => draft.expansions[target.project] = false)
+                    } else {
+                        draft.sourceTargets = []
+                        draft.filteredSourceTargets = []
+                        draft.expansions = {}
+                    }
+
                 }
             })
         case CLOSE_NOTIFICATION:
@@ -130,6 +184,39 @@ export default (state = initialState, action) => {
         case OPEN_BUILD_INFO_DIALOG:
             return produce(state, draft => {
                 draft.buildInfoDialogOpen = action.payload
+            })
+        case SET_FUZZY_SEARCH:
+            return produce(state, draft => {
+                draft.fuzzySearch = action.payload
+            })
+        case DISPLAY_DOWNLOAD_MODAL:
+            return produce(state, draft => {
+                draft.displayDownloadModal = action.payload
+            })
+        case CHANGE_DOWNLOAD_RESULT_FILENAME:
+            return produce(state, draft => {
+                draft.downloadResultFileName = action.payload
+            })
+        case CHANGE_DOWNLOAD_FILE_FORMAT:
+            return produce(state, draft => {
+                draft.downloadResultFileFormat = action.payload
+            })
+        case DOWNLOAD_RESULTS:
+            exportFromJSON(
+                {
+                    data: state.sourceTargets,
+                    fileNamme: state.downloadResultFileName + '.' + state.downloadResultFileFormat,
+                    exportType: state.downloadResultFileFormat,
+                })
+            return state
+        case FILTER_PROJECT:
+            return produce(state, draft => {
+                draft.projectFilter = action.payload
+                draft.filteredSourceTargets = state.sourceTargets.filter(target => target.project.startsWith(action.payload))
+            })
+        case PUBLISH_NOTIFICATION:
+            return produce(state, draft => {
+                draft.notification = action.payload
             })
         default:
             return state
