@@ -1,4 +1,4 @@
-import { CLICK_COUNT, CHANGE_SEARCH_TEXT, SEARCH, SET_LOCALE, FETCH_LOCALE_TRANSLATIONS, CLOSE_NOTIFICATION, OPEN_ABOUT_DIALOG, CLOSE_ABOUT_DIALOG, EXPAND_ALL, EXPAND_ACCORDION, TOGGLE_LEFT_DRAWER, DISPLAY_JSON_MODAL, OPEN_BUILD_INFO_DIALOG, SET_FUZZY_SEARCH, DISPLAY_DOWNLOAD_MODAL, CHANGE_DOWNLOAD_RESULT_FILENAME, CHANGE_DOWNLOAD_FILE_FORMAT, DOWNLOAD_RESULTS, FILTER_PROJECT, COPY, PUBLISH_NOTIFICATION } from "../actions"
+import { CLICK_COUNT, CHANGE_SEARCH_TEXT, SEARCH, SET_LOCALE, FETCH_LOCALE_TRANSLATIONS, CLOSE_NOTIFICATION, OPEN_ABOUT_DIALOG, CLOSE_ABOUT_DIALOG, EXPAND_ALL, EXPAND_ACCORDION, TOGGLE_LEFT_DRAWER, DISPLAY_JSON_MODAL, OPEN_BUILD_INFO_DIALOG, SET_FUZZY_SEARCH, DISPLAY_DOWNLOAD_MODAL, CHANGE_DOWNLOAD_RESULT_FILENAME, CHANGE_DOWNLOAD_FILE_FORMAT, DOWNLOAD_RESULTS, FILTER_PROJECT, COPY, PUBLISH_NOTIFICATION, SEARCH_PENDING, SEARCH_FULFILLED } from "../actions"
 import produce from "immer"
 import sources from '../data/sources.json'
 import projects from '../data/projects.json'
@@ -118,35 +118,17 @@ export default (state = initialState, action) => {
                 draft.translations[state.selectedLocale] = action.payload
                 draft.notification = `${Object.keys(draft.translations[state.selectedLocale]).length} translations for ${state.selectedLocale} are loaded successfully. `
             })
-        case SEARCH:
+        case SEARCH_PENDING:
             return produce(state, draft => {
-                if (state.fuzzySearch) {
-                    fuzzySearch(state, action, draft);
-                } else {
-                    const targets = state.sources[action.payload]
-                    const translations = state.translations[state.selectedLocale]
-                    if (translations) {
-                        draft.translationTargets = [translations[action.payload]]
-                    } else {
-                        draft.translationTargets = undefined
-                        draft.expansions = {}
-                    }
-
-                    if (targets) {
-                        draft.sourceTargets = targets.map(target => ({
-                            ...target,
-                            ...state.projects[target.project],
-                            source: action.payload,
-                        }))
-                        draft.filteredSourceTargets = draft.sourceTargets
-                        targets.forEach(target => draft.expansions[target.project] = false)
-                    } else {
-                        draft.sourceTargets = []
-                        draft.filteredSourceTargets = []
-                        draft.expansions = {}
-                    }
-
-                }
+                draft.translationLoading = true
+            })
+        case SEARCH_FULFILLED:
+            return produce(state, draft => {
+                draft.translationLoading = false
+                draft.sourceTargets = action.payload.sourceTargets
+                draft.filteredSourceTargets = action.payload.filteredSourceTargets
+                draft.translationTargets = action.payload.translationTargets
+                draft.expansions = action.payload.expansions
             })
         case CLOSE_NOTIFICATION:
             return produce(state, draft => {

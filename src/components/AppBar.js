@@ -13,9 +13,7 @@ import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import InputLabel from '@mui/material/InputLabel';
-import { fetchLocaleTranslations, setLocale, openAboutDialog, expandAll, setFuzzySearch } from '../actions'
-import Backdrop from '@mui/material/Backdrop';
-import CircularProgress from '@mui/material/CircularProgress';
+import { fetchLocaleTranslations, setLocale, openAboutDialog, expandAll, setFuzzySearch, searching } from '../actions'
 import Tooltip from '@mui/material/Tooltip';
 import Stack from '@mui/material/Stack';
 import Snackbar from '@mui/material/Snackbar';
@@ -69,7 +67,7 @@ const renderLocaleSelector = (locales) => {
     ))
 }
 
-const renderProjectFilter = (projects) => {
+const renderProjectFilterOptions = (projects) => {
     return projects.map(project => (
         <MenuItem value={project}>
             <em>{project}</em>
@@ -108,7 +106,7 @@ const renderDownloadButton = (dispatch, sourceTargets) => {
     }
 }
 
-const renderProjectFiler = (projectFilter, sourceTargets, dispatch) => {
+const renderProjectFilter = (projectFilter, sourceTargets, dispatch) => {
     const projects = new Set()
     sourceTargets.forEach(target => {
         projects.add(target.project.split('-')[0])
@@ -125,7 +123,7 @@ const renderProjectFiler = (projectFilter, sourceTargets, dispatch) => {
                 }}
                 label="Project"
             >
-                {renderProjectFilter(Array.from(projects))}
+                {renderProjectFilterOptions(Array.from(projects))}
             </Select>
         </FormControl>
     )
@@ -148,12 +146,6 @@ export default function PrimarySearchAppBar() {
     return (
         <Box sx={{ flexGrow: 1 }}>
             <AppBar position="sticky">
-                <Backdrop
-                    sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-                    open={translationLoading}
-                >
-                    <CircularProgress color="inherit" />
-                </Backdrop>
                 <Toolbar>
                     <IconButton
                         size="large"
@@ -193,14 +185,19 @@ export default function PrimarySearchAppBar() {
                             </Select>
                         </FormControl>
                     </Tooltip>
-                    {renderProjectFiler(projectFilter, sourceTargets, dispatch)}
+                    {renderProjectFilter(projectFilter, sourceTargets, dispatch)}
                     <Search>
                         <SearchIconWrapper>
                             <SearchIcon />
                         </SearchIconWrapper>
                         <SearchInput />
                     </Search>
-                    <Button variant="contained" color="success" onClick={() => dispatch(search(text))}>
+                    <Button variant="contained" color="success" onClick={() => {
+                        new Promise((resolve, reject) => {
+                            dispatch(searching());
+                            resolve()
+                        }).then(() => dispatch(search(text)))
+                    }}>
                         Search
                     </Button>
                     <FormGroup>
@@ -234,6 +231,6 @@ export default function PrimarySearchAppBar() {
                 </Toolbar>
                 {renderSnackBar(dispatch, notification)}
             </AppBar>
-        </Box>
+        </Box >
     );
 }

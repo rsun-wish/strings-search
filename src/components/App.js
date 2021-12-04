@@ -7,11 +7,13 @@ import LeftMenuDrawer from './LeftManuDrawer'
 import DataModalDisplay from './DataModalDisplay';
 import BuildInfoDialog from './BuildInfoDialog';
 import DownloadModalDisplay from './DownloadModalDisplay';
+import Backdrop from './Backdrop'
 
 function App() {
   return (
     <div className="App">
       <AppBar />
+      <Backdrop/>
       <LeftMenuDrawer />
       <DataModalDisplay />
       <DownloadModalDisplay />

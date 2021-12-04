@@ -40,7 +40,7 @@ export default function DownloadModalDisplay() {
                     label="File Name"
                     fullWidth
                     variant="filled"
-                    value={filename + '.' + format}
+                    value={filename}
                     onChange={(event) => dispatch(changeDownloadResultFileName(event.target.value))}
                 />
                 <InputLabel id="demo-simple-select-label">File Format</InputLabel>

@@ -20,6 +20,8 @@ export const CHANGE_DOWNLOAD_FILE_FORMAT = 'CHANGE_DOWNLOAD_FILE_FORMAT'
 export const DOWNLOAD_RESULTS = 'DOWNLOAD_RESULTS'
 export const FILTER_PROJECT = 'FILTER_PROJECT'
 export const PUBLISH_NOTIFICATION = 'PUBLISH_NOTIFICATION'
+export const SEARCH_PENDING = 'SEARCH_PENDING';
+export const SEARCH_FULFILLED = 'SEARCH_FULFILLED';
 export const clickCount = () => ({
     type: CLICK_COUNT
 })
@@ -34,10 +36,84 @@ export const loadData = () => ({
     payload: fetch('/strings.json').then(data => data.json())
 })
 
-export const search = (text) => ({
-    type: SEARCH,
-    payload: text
-})
+const fuzzySearch = (state, action, dispatch) => {
+    const fuzzySearch = state.fuzzySearch
+    let sourceStrings = [action.payload]
+    if (fuzzySearch) {
+        sourceStrings = Object.keys(state.sources).filter(key => key.includes(action.payload))
+    }
+
+    let sourceTargets = []
+    let filteredSourceTargets = []
+    let translationTargets = []
+    let expansions = {}
+
+    const translations = state.translations[state.selectedLocale]
+
+    for (var i = 0; i < sourceStrings.length; i++) {
+        const sourceString = sourceStrings[i]
+        const targets = state.sources[sourceStrings[i]]
+        if (translations && translations[sourceStrings[i]]) {
+            translationTargets.concat(translations[sourceStrings[i]])
+        }
+
+        if (targets) {
+            const mappedTargets = targets.map(target => ({
+                source: sourceString,
+                ...target,
+                ...state.projects[target.project]
+            }));
+            sourceTargets = sourceTargets.concat(mappedTargets);
+        }
+    }
+    filteredSourceTargets = sourceTargets
+    sourceTargets.forEach(target => expansions[target.project] = false);
+    translationTargets.forEach(target => expansions[target.sourceStrings] = false);
+    if (translationTargets.length && sourceTargets.length === 0) {
+        translationTargets = []
+        filteredSourceTargets = []
+        expansions = {}
+    }
+    dispatch(searchFulfilled(sourceTargets, filteredSourceTargets, translationTargets, expansions))
+}
+
+export const search = (text) => {
+    return async (dispatch, getState) => {
+        const state = getState().app
+        const action = { payload: text }
+        if (state.fuzzySearch) {
+            setTimeout(() => fuzzySearch(state, action, dispatch), 0);
+        } else {
+            const targets = state.sources[action.payload]
+            const translations = state.translations[state.selectedLocale]
+            let filteredSourceTargets = []
+            let sourceTargets = []
+            let translationTargets = []
+            let expansions = {}
+            if (translations) {
+                translationTargets = [translations[action.payload]]
+            } else {
+                translationTargets = undefined
+                expansions = {}
+            }
+
+            if (targets) {
+                sourceTargets = targets.map(target => ({
+                    ...target,
+                    ...state.projects[target.project],
+                    source: action.payload,
+                }))
+                filteredSourceTargets = sourceTargets
+                targets.forEach(target => expansions[target.project] = false)
+            } else {
+                sourceTargets = []
+                filteredSourceTargets = []
+                expansions = {}
+            }
+            dispatch(searchFulfilled(sourceTargets, filteredSourceTargets, translationTargets, expansions))
+        }
+    }
+}
 
 export const setLocale = (locale) => ({
     type: SET_LOCALE,
@@ -121,4 +197,18 @@ export const filterProject = (project) => ({
 export const publishNotification = (content) => ({
     type: PUBLISH_NOTIFICATION,
     payload: content
+})
+
+export const searching = () => ({
+    type: SEARCH_PENDING,
+})
+
+export const searchFulfilled = (sourceTargets, filteredSourceTargets, translationTargets, expansions) => ({
+    type: SEARCH_FULFILLED,
+    payload: {
+        sourceTargets,
+        filteredSourceTargets,
+        translationTargets,
+        expansions
+    }
 })
