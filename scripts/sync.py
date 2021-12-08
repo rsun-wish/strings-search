@@ -446,6 +446,6 @@ def main():
     artifacts()
     copy()
     print('Done')
-    print('Took: ' + time.time() - start)
+    print('Took: ' + str(time.time() - start) + ' seconds')
 
 main()
