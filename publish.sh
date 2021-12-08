@@ -1,5 +1,5 @@
-# set -e
-# /usr/local/opt/python@3.7/libexec/bin/python scripts/sync.py
+set -e
+docker run -v ${WORK_DIR}:/allstrings -v ${REPO_DIR}:/repo strings_sync -w /allstrings -r /repo -t ${XTM_TOKEN} 
 set +e
 git add src/data
 git add public/translations
