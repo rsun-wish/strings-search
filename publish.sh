@@ -7,6 +7,7 @@ git add public/translations
 git commit -m "sync translations"
 git pull --rebase origin master
 set -e
+npm install
 yarn build
 git checkout -b tmp
 cp -fr build/* .
