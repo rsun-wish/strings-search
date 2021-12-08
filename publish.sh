@@ -1,4 +1,5 @@
 set -e
+cd ${REPO_DIR}
 docker build . -t strings_sync 
 docker run -v ${WORK_DIR}:/allstrings -v ${REPO_DIR}:/repo strings_sync -w /allstrings -r /repo -t "${XTM_TOKEN}"
 set +e
