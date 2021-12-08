@@ -1,3 +1,6 @@
+# set -e
+# /usr/local/opt/python@3.7/libexec/bin/python scripts/sync.py
+set +e
 git add src/data
 git add public/translations
 git commit -m "sync translations"

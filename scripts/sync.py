@@ -9,8 +9,9 @@ from multiprocessing import Pool, Manager
 import zipfile
 import polib
 from datetime import datetime
+import argparse
+import time
 
-# packages = [
 packages = [
     {'url': 'https://pypi.infra.wish.com/api/package/wishstrings/',
         'folder_name': 'wishstrings', 'is_python': True},
@@ -30,12 +31,12 @@ packages = [
      'folder_name': 'wpsuistrings', 'is_javascript': True},
     {'url': 'https://npm.infra.wish.com/-/verdaccio/sidebar/@ContextLogic/legostrings',
      'folder_name': 'legostrings', 'is_javascript': True}]
+
 work_dir = '/Users/renchen/Work/playground/allstrings'
-artifacts_dir = os.path.join(work_dir, 'artifacts')
-output_dir = os.path.join(work_dir, 'output')
+xtm_token = os.environ.get('XTM_TOKEN')
 
 headers = {
-    'Authorization': os.environ.get('XTM_TOKEN')
+    'Authorization': xtm_token
 }
 
 xtm_uri = "https://wish.xtm-intl.com/project-manager-api-rest"
@@ -43,14 +44,32 @@ projects_uri = '/projects'
 project_uri = '/projects/{0}'
 download_source_uri = '/projects/{0}/files/sources/download'
 
+artifacts_dir = os.path.join(work_dir, 'artifacts')
+output_dir = os.path.join(work_dir, 'output')
 locales_json_dir = os.path.join(output_dir, 'locales.json')
 projects_json_dir = os.path.join(output_dir, 'projects.json')
 all_projects_sources_dir = os.path.join(work_dir, 'all_projects')
 sources_json_dir = os.path.join(output_dir, 'sources.json')
 translations_output_dir = os.path.join(output_dir, 'translations')
 build_json_dir = os.path.join(output_dir, 'build.json')
+repo_dir = None
 
 versions = {}
+
+
+def init():
+    global artifacts_dir, output_dir, locales_json_dir, projects_json_dir, all_projects_sources_dir, sources_json_dir, build_json_dir, translations_output_dir, headers
+    artifacts_dir = os.path.join(work_dir, 'artifacts')
+    output_dir = os.path.join(work_dir, 'output')
+    locales_json_dir = os.path.join(output_dir, 'locales.json')
+    projects_json_dir = os.path.join(output_dir, 'projects.json')
+    all_projects_sources_dir = os.path.join(work_dir, 'all_projects')
+    sources_json_dir = os.path.join(output_dir, 'sources.json')
+    translations_output_dir = os.path.join(output_dir, 'translations')
+    build_json_dir = os.path.join(output_dir, 'build.json')
+    headers = {
+        'Authorization': xtm_token
+    }
 
 
 def download(url):
@@ -102,6 +121,7 @@ def merge(strings, content):
     for key, value in content.items():
         strings[key] = value
 
+
 def merge_with_append(strings, content):
     for key, value in content.items():
         if key == 'Payment':
@@ -110,6 +130,7 @@ def merge_with_append(strings, content):
             strings[key] = strings[key] + value
         else:
             strings[key] = value
+
 
 def artifacts():
     print('Start building strings.json for artifacts')
@@ -144,6 +165,7 @@ def artifacts():
         l.sort()
         json.dump(l, f, sort_keys=True)
     print('Successfully built all translations strings.json')
+
 
 def parse_javacript_artifact_content(untar_dir, pkg_folder_name):
     print('Parsing contents at ' + untar_dir)
@@ -298,6 +320,7 @@ def source_files(projects):
     p = Pool(8)
     p.map(source_files_job, projects)
 
+
 def sources_json_job(source_path, dir):
     try:
         strings = {}
@@ -341,13 +364,15 @@ def sources_json_job(source_path, dir):
         print(e)
         raise e
 
+
 def sources_json(projects):
     print('Start building sources.json')
     source_files(projects)
     dirs = os.listdir(all_projects_sources_dir)
     p = Pool(8)
 
-    args = [(os.path.join(all_projects_sources_dir, dir, 'source.zip'), dir) for dir in dirs]
+    args = [(os.path.join(all_projects_sources_dir, dir, 'source.zip'), dir)
+            for dir in dirs]
     results = p.starmap(sources_json_job, args)
     p.close()
     p.join()
@@ -358,18 +383,22 @@ def sources_json(projects):
         json.dump(strings, f, ensure_ascii=False, sort_keys=True)
     print('Successfully saved sources.json to ' + sources_json_dir)
 
+
 def copy():
-    shutil.copy(projects_json_dir, '../src/data/')
-    print('Copied artifact: ' + projects_json_dir, os.path.abspath('../src/data'))
-    shutil.copy(sources_json_dir, '../src/data/')
-    print('Copied artifact: ' + sources_json_dir, os.path.abspath('../src/data'))
-    shutil.copy(locales_json_dir, '../src/data/')
-    print('Copied artifact: ' + locales_json_dir, os.path.abspath('../src/data'))
-    shutil.copy(build_json_dir, '../src/data/')
-    print('Copied artifact: ' + build_json_dir, os.path.abspath('../src/data'))
-    shutil.rmtree('../public/translations')
-    shutil.copytree(translations_output_dir, '../public/translations')
-    print('Copied artifact: ' + translations_output_dir, os.path.abspath('../public/translations'))
+    data_dir = os.path.join(repo_dir, 'src/data')
+    translations_dir = os.path.join(repo_dir, 'public/translations')
+    shutil.copy(projects_json_dir, data_dir)
+    print('Copied artifact: ' + projects_json_dir, data_dir)
+    shutil.copy(sources_json_dir, data_dir)
+    print('Copied artifact: ' + sources_json_dir, data_dir)
+    shutil.copy(locales_json_dir, data_dir)
+    print('Copied artifact: ' + locales_json_dir, data_dir)
+    shutil.copy(build_json_dir, data_dir)
+    print('Copied artifact: ' + build_json_dir, data_dir)
+    shutil.rmtree(translations_dir)
+    shutil.copytree(translations_output_dir, translations_dir)
+    print('Copied artifact: ' + translations_output_dir, translations_dir)
+
 
 def build_stats():
     print('Start building build.json')
@@ -381,7 +410,8 @@ def build_stats():
         resp = requests.get(pkg['url'])
         resp_json = json.loads(resp.content.decode())
         if 'is_python' in pkg:
-            obj['versions'][pkg['folder_name']] = resp_json['packages'][0]['version']
+            obj['versions'][pkg['folder_name']
+                            ] = resp_json['packages'][0]['version']
         if 'is_javascript' in pkg:
             obj['versions'][pkg['folder_name']] = resp_json['latest']['version']
     with open(build_json_dir, 'w') as f:
@@ -390,6 +420,21 @@ def build_stats():
 
 
 def main():
+    start = time.time()
+    parser = argparse.ArgumentParser(
+        description='Sync sources and translations')
+    parser.add_argument('-w', '--work_dir',
+                        help='Working directory', required=True)
+    parser.add_argument('-r', '--repo_dir',
+                        help='Repository directory', required=True)
+    parser.add_argument('-t', '--token', help='XTM token', required=True)
+    args = vars(parser.parse_args())
+    global work_dir, xtm_token, repo_dir
+    work_dir = args['work_dir']
+    xtm_token = args['token']
+    repo_dir = args['repo_dir']
+    init()
+
     if not os.path.exists(artifacts_dir):
         os.makedirs(artifacts_dir)
     if not os.path.exists(output_dir):
@@ -401,5 +446,6 @@ def main():
     artifacts()
     copy()
     print('Done')
+    print('Took: ' + time.time() - start)
 
 main()
