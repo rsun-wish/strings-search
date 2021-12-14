@@ -45,7 +45,7 @@ const initialState = {
     leftDrawerOpen: false,
     displayModal: null,
     buildInfoDialogOpen: false,
-    fuzzySearch: false,
+    fuzzySearch: true,
     displayDownloadModal: false,
     downloadResultFileName: 'results',
     downloadResultFileFormat: exportFromJSON.types.json,
@@ -187,7 +187,7 @@ export default (state = initialState, action) => {
             exportFromJSON(
                 {
                     data: state.sourceTargets,
-                    fileNamme: state.downloadResultFileName + '.' + state.downloadResultFileFormat,
+                    fileName: state.downloadResultFileName + '.' + state.downloadResultFileFormat,
                     exportType: state.downloadResultFileFormat,
                 })
             return state
