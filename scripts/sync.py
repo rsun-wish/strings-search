@@ -134,8 +134,6 @@ def merge_with_append(strings, content):
 
 def artifacts():
     print('Start building strings.json for artifacts')
-    if os.path.exists(artifacts_dir):
-        shutil.rmtree(artifacts_dir)
     p = Pool(8)
     p.map(artifacts_helper, packages)
     strings = {}
@@ -437,8 +435,16 @@ def main():
 
     if not os.path.exists(artifacts_dir):
         os.makedirs(artifacts_dir)
+    else:
+        shutil.rmtree(artifacts_dir)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
+    else:
+        shutil.rmtree(output_dir)
+    if not os.path.exists(all_projects_sources_dir):
+        os.makedirs(all_projects_sources_dir)
+    else:
+        shutil.rmtree(all_projects_sources_dir)
     projects = get_projects()
     projects_json(projects)
     sources_json(projects)
