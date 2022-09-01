@@ -14,9 +14,9 @@ import time
 
 packages = [
     {'url': 'https://pypi.infra.wish.com/api/package/wishstrings/',
-        'folder_name': 'wishstrings', 'is_python': True},
+     'folder_name': 'wishstrings', 'is_python': True},
     {'url': 'https://pypi.infra.wish.com/api/package/merchantstrings/',
-        'folder_name': 'merchantstrings', 'is_python': True},
+     'folder_name': 'merchantstrings', 'is_python': True},
     {'url': 'https://npm.infra.wish.com/-/verdaccio/sidebar/@ContextLogic/mmstrings',
      'folder_name': 'mmstrings', 'is_javascript': True},
     {'url': 'https://npm.infra.wish.com/-/verdaccio/sidebar/@ContextLogic/bluestrings',
@@ -56,9 +56,15 @@ repo_dir = None
 
 versions = {}
 
+def setup_dir(dir):
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+    else:
+        shutil.rmtree(dir)
 
 def init():
-    global artifacts_dir, output_dir, locales_json_dir, projects_json_dir, all_projects_sources_dir, sources_json_dir, build_json_dir, translations_output_dir, headers
+    global artifacts_dir, output_dir, locales_json_dir, projects_json_dir, all_projects_sources_dir, sources_json_dir,\
+        build_json_dir, translations_output_dir, headers
     artifacts_dir = os.path.join(work_dir, 'artifacts')
     output_dir = os.path.join(work_dir, 'output')
     locales_json_dir = os.path.join(output_dir, 'locales.json')
@@ -67,6 +73,10 @@ def init():
     sources_json_dir = os.path.join(output_dir, 'sources.json')
     translations_output_dir = os.path.join(output_dir, 'translations')
     build_json_dir = os.path.join(output_dir, 'build.json')
+    dirs = [artifacts_dir, output_dir, all_projects_sources_dir, translations_output_dir]
+    for dir in dirs:
+        if dir:
+            setup_dir(dir)
     headers = {
         'Authorization': xtm_token
     }
@@ -120,7 +130,6 @@ def artifacts_helper(pkg_url_obj):
 def merge(strings, content):
     for key, value in content.items():
         strings[key] = value
-
 
 def merge_with_append(strings, content):
     for key, value in content.items():
@@ -193,12 +202,14 @@ def parse_javacript_artifact_content(untar_dir, pkg_folder_name):
                         if type(value[1]) is list:
                             for v in value[1]:
                                 strings[v] = {
-                                    'is_translated': True, 'source_string': source_string, 'locale': normalized_locale, 'context': context, 'package': pkg_folder_name
+                                    'is_translated': True, 'source_string': source_string, 'locale': normalized_locale,
+                                    'context': context, 'package': pkg_folder_name
                                 }
                         else:
                             for v in value[1:]:
                                 strings[v] = {
-                                    'is_translated': True, 'source_string': source_string, 'locale': normalized_locale, 'context': context, 'package': pkg_folder_name
+                                    'is_translated': True, 'source_string': source_string, 'locale': normalized_locale,
+                                    'context': context, 'package': pkg_folder_name
                                 }
                     except Exception as e:
                         print(raw_file_path)
@@ -206,7 +217,8 @@ def parse_javacript_artifact_content(untar_dir, pkg_folder_name):
                         raise e
                 else:
                     strings[value[1]] = {
-                        'is_translated': True, 'source_string': source_string, 'locale': normalized_locale, 'context': context, 'package': pkg_folder_name
+                        'is_translated': True, 'source_string': source_string, 'locale': normalized_locale,
+                        'context': context, 'package': pkg_folder_name
                     }
             strings_dir = os.path.join(
                 artifacts_dir, pkg_folder_name, 'translations', normalized_locale)
@@ -259,7 +271,7 @@ def get_projects():
                             headers=headers, params={'page': page})
         projects = projects + json.loads(resp.content.decode())
         page = page + 1
-    print('Succesfully fetched {0} projects'.format(len(projects)))
+    print('Successfully fetched {0} projects'.format(len(projects)))
     return projects
 
 
@@ -433,18 +445,6 @@ def main():
     repo_dir = args['repo_dir']
     init()
 
-    if not os.path.exists(artifacts_dir):
-        os.makedirs(artifacts_dir)
-    else:
-        shutil.rmtree(artifacts_dir)
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    else:
-        shutil.rmtree(output_dir)
-    if not os.path.exists(all_projects_sources_dir):
-        os.makedirs(all_projects_sources_dir)
-    else:
-        shutil.rmtree(all_projects_sources_dir)
     projects = get_projects()
     projects_json(projects)
     sources_json(projects)
